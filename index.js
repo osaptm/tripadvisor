@@ -166,8 +166,15 @@ async function workerScrapePage() {
     let page = await accessResourcePage();
     if (page === null) { return; }
     const myWorker = new Worker('./workers/worker_scrape_atracciones_by_todo.js',
-     { workerData: { 'ip_proxy': proxy, 'url': page.url_actual, 'pagina_actual': page.numero_actual, 'idrecurso':page.idrecurso.toString(), 'idpais':page.idpais.toString(), 'idtipotodo':page.idtipotodo.toString()} });
-    console.log("---> Inicio Worker "+page.idrecurso.toString());
+     { workerData: { 'ip_proxy': proxy, 
+     'url': page.url_actual, 
+     'pagina_actual': page.numero_actual, 
+     'idrecurso':page.idrecurso.toString(), 
+     'idpais':page.idpais.toString(), 
+     'idtipotodo':page.idtipotodo.toString(),
+     'idpage':page._id.toString(),
+    } });
+    console.log("---> Inicio Worker ");
     myWorker.on('exit', async (code) => {
         console.log("---> Fin Worker = " + page.url_actual);
         myWorker.terminate();
@@ -216,6 +223,7 @@ async function onePageToScrape() {
     let position = Math.floor(Math.random() * (temp_array_pages.length - 1));
     let page = temp_array_pages[position];
     temp_array_pages.splice(position, 1);
+    await mongo.Pagina.updateOne({ _id: page._id }, { $set: { estado_scrapeo: 'INWORKER' } });
     return page;
 }
 
@@ -240,7 +248,7 @@ async function array_paginas_pendientes_scrapeo(array_todos_pendientes) {
     try {
         const array_paginas = [];
         for (const todo of array_todos_pendientes) {
-            let ultima_pagina = await mongo.Pagina.findOne({ idrecurso: todo._id }).sort({ _id: -1 });
+            let ultima_pagina = await mongo.Pagina.findOne({ idrecurso: todo._id, estado_scrapeo:'PENDING' }).sort({ _id: -1 });
             if (ultima_pagina === null) {
                 const _pagina = new mongo.Pagina({ url_actual: todo.url, idrecurso:todo._id });
                 ultima_pagina = await _pagina.save();

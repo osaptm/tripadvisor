@@ -18,7 +18,7 @@ function nombre_final_sin_numeracion(nombre) {
   return nombre_final;
 }
 
-async function scrapear_continente_tripadvisor() {
+async function mainWorker() {
   try {
     await dbConnection();
     // Accedemos a mongo para traer pagina actual y numero
@@ -63,8 +63,13 @@ async function scrapear_continente_tripadvisor() {
 
   } catch (error) {
 
-    console.log('ERROR TOTAL EN MAIN ', error);
+    await mongo.Pagina.updateOne({ _id: ObjectId(workerData.idpage) }, { $set: { estado_scrapeo: 'PENDING' } });
+    console.log('ERROR EN MAIN '+workerData.ip_proxy, error);
     process.exit();
+
+  } finally {
+
+    await mongo.Pagina.updateOne({ _id: ObjectId(workerData.idpage) }, { $set: { estado_scrapeo: 'FINALIZADO' } });
 
   }
 
@@ -130,7 +135,7 @@ async function buscarSiguientePagina(page, paginaActualTripasvisor, url) {
     return { paginaSiguiente: paginaActualTripasvisor, enlace: null };
 
   } catch (error) {
-
+    await mongo.Pagina.updateOne({ _id: ObjectId(workerData.idpage) }, { $set: { estado_scrapeo: 'PENDING' } });
     console.log('Error en buscarSiguientePagina', error);
     process.exit();
 
@@ -151,7 +156,7 @@ async function extraeAtractivos(page) { //idPagina
     // Buscamos todos los elementos que coincidan
     const elements = await page.$$(".jemSU[data-automation='WebPresentation_SingleFlexCardSection']");
     // Recorrer todo el arreglo
-    for (let element of elements) {
+    for await (let element of elements) {
       const article = await element.$('article');
       const html_article = await (await article.getProperty('innerHTML')).jsonValue();
       const secondDiv = await element.$('article > div:nth-of-type(2)');
@@ -187,15 +192,20 @@ async function extraeAtractivos(page) { //idPagina
         }
       }
     }
-
+ 
+    
   } catch (error) {
 
-    //await mensajeWhatsapp('Error extraeAtractivos()');
+    await mongo.Pagina.updateOne({ _id: ObjectId(workerData.idpage) }, { $set: { estado_scrapeo: 'PENDING' } });
     console.log('Error en extraeAtractivos', error);
     process.exit();
+
+  } finally {
+
+    await mongo.Pagina.updateOne({ _id: ObjectId(workerData.idpage) }, { $set: { estado_scrapeo: 'FINALIZADO' } });
 
   }
 }
 /************************************************************/
 /************************************************************/
-scrapear_continente_tripadvisor();
+mainWorker();

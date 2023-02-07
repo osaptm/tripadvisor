@@ -16,13 +16,6 @@ const proxyUrl = 'http://prueba:123@' + workerData.ip_proxy;
 const tiempo_espera = 30000;
 // ************* Variable requeridas ************* //
 
-function nombre_final_sin_numeracion(nombre) {
-  const nombre_final_array = nombre.split('. ');
-  const eliminar_primero = nombre_final_array.shift();
-  const nombre_final = nombre_final_array.join('');
-  return nombre_final;
-}
-
 async function get_pais_pending() {
   const pais = await mongo.Pais.findOne({ estado_scrapeo: "PENDING" });
   return pais;
