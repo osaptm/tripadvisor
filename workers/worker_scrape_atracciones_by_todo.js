@@ -44,19 +44,19 @@ async function mainWorker() {
     }
 
      /****************************/
-     //throw "GENERAMOS UN ERROR PARA PROBAR";
+     throw "GENERAMOS UN ERROR PARA PROBAR";
      console.log(`-------->  ${workerData.nameWorker} - NRO ${paginaActualTripasvisor} = ${url}`);
      /****************************/
 
     // Buscamos si hay una siguiente pagina
     const resultado_buscarSiguientePagina = await buscarSiguientePagina(page, paginaActualTripasvisor, url);
-    //paginaSiguiente, enlace, 
+    //paginaSiguiente, enlace,    
+    await extraeAtractivos(page); 
+
     if(resultado_buscarSiguientePagina.enlace === null){
       // Actualizamos el recurso a estado = finalizado 
       await mongo.Detalle_tipotodo_pais.updateOne({ _id: ObjectId(workerData.idrecurso) }, { $set: { estado_scrapeo: 'FINALIZADO' } });
     }
-   
-    await extraeAtractivos(page); 
     // Cerrar Pagina - Cerrar Navegador y Terminar Proceso NODEJS
     await page.close();
     await browser.close();
@@ -90,7 +90,7 @@ async function buscarSiguientePagina(page, paginaActualTripasvisor, url) {
         await page.waitForSelector(".jemSU[data-automation='WebPresentation_PaginationLinksList']", { timeout: tiempo_espera });
         tiene_paginacion = true;
       } catch (error) {
-        //console.log("--------> SIN PAGINACION - POSIBLE ERROR");
+        console.log("--------> SIN PAGINACION - POSIBLE ERROR");
         await page.waitForSelector(".jemSU", { timeout: tiempo_espera });
       }
     }
@@ -106,7 +106,7 @@ async function buscarSiguientePagina(page, paginaActualTripasvisor, url) {
         if (Number(nro_pagina) === paginaActualTripasvisor + 1) {    
           
           let obj_pagina = null;
-          if(href.trim() !== ""){
+          if(href.trim() !== ""){            
              obj_pagina = await mongo.Pagina.findOne({ url_actual: href });
           }else{
             throw "Error buscarSiguientePagina pagina href vacio";
@@ -122,9 +122,8 @@ async function buscarSiguientePagina(page, paginaActualTripasvisor, url) {
               idrecurso: ObjectId(workerData.idrecurso)
             }
             const Pagina = new mongo.Pagina(data_);
-            // Guardar DB
-            await Pagina.save();
-            //Return Final  
+            const resultadoPagina = await Pagina.save();
+            console.log("--------------->"+resultadoPagina);
           }
           return { paginaSiguiente: Number(nro_pagina), enlace: href }; 
         }

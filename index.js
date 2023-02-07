@@ -115,7 +115,7 @@ const accessResourceProxy = async () => {
     try {
         return oneProxy();
     } catch (error) {
-        console.log("Error Mutex accessResourceProxy "+error);
+        console.log("Error Mutex accessResourceProxy " + error);
     } finally {
         release(); // Release the mutex  
     }
@@ -127,31 +127,34 @@ const accessResourcePage = async () => {
     try {
         return await onePageToScrape();
     } catch (error) {
-        console.log("Error Mutex accessResourcePage "+error);
+        console.log("Error Mutex accessResourcePage " + error);
     } finally {
         release(); // Release the mutex
     }
 };
 
-async function workerScrapePage( nameWorker ) {
+async function workerScrapePage(nameWorker) {
     let proxy = await accessResourceProxy();
     let page = await accessResourcePage();
     if (page === null) { return; }
     const myWorker = new Worker('./workers/worker_scrape_atracciones_by_todo.js',
-     { workerData: { 'ip_proxy': proxy, 
-     'url': page.url_actual, 
-     'pagina_actual': page.numero_actual, 
-     'idrecurso':page.idrecurso.toString(), 
-     'idpais':page.idpais.toString(), 
-     'idtipotodo':page.idtipotodo.toString(),
-     'idpage':page._id.toString(),
-     'nameWorker':nameWorker
-    } });
+        {
+            workerData: {
+                'ip_proxy': proxy,
+                'url': page.url_actual,
+                'pagina_actual': page.numero_actual,
+                'idrecurso': page.idrecurso.toString(),
+                'idpais': page.idpais.toString(),
+                'idtipotodo': page.idtipotodo.toString(),
+                'idpage': page._id.toString(),
+                'nameWorker': nameWorker
+            }
+        });
     //console.log("---> (NEW WORKER) ");
     myWorker.on('exit', async (code) => {
         //console.log("---> (EXIT WORKER) = " + page.url_actual);
         myWorker.terminate();
-        setTimeout(() => workerScrapePage(nameWorker) , Math.floor((Math.random() * 1000)));
+        setTimeout(() => workerScrapePage(nameWorker), Math.floor((Math.random() * 1000)));
     });
 }
 
@@ -167,7 +170,7 @@ async function workerScrapePage( nameWorker ) {
 
 
 const array_proxy = ['196.196.220.155', '196.196.247.237', '5.157.55.218', "165.231.95.148", "45.95.118.28", "165.231.95.17", "196.196.34.44", "185.158.104.152", "165.231.95.118", "50.3.198.225", "185.158.104.33", "185.158.106.179", "196.196.34.72", "185.158.106.153", "185.158.104.161", "5.157.55.128", "196.196.220.229", "196.196.34.180", "50.3.198.89", "50.3.198.30", "45.95.118.191", "196.196.34.84", "50.3.198.193",
-'196.196.220.155', '196.196.247.237', '5.157.55.218',  "165.231.95.148", "45.95.118.28", "165.231.95.17", "196.196.34.44", "185.158.104.152", "165.231.95.118", "50.3.198.225", "185.158.104.33", "185.158.106.179", "196.196.34.72", "185.158.106.153", "185.158.104.161", "5.157.55.128", "196.196.220.229", "196.196.34.180", "50.3.198.89", "50.3.198.30", "45.95.118.191", "196.196.34.84", "50.3.198.193"]; //185.104.217.4
+    '196.196.220.155', '196.196.247.237', '5.157.55.218', "165.231.95.148", "45.95.118.28", "165.231.95.17", "196.196.34.44", "185.158.104.152", "165.231.95.118", "50.3.198.225", "185.158.104.33", "185.158.106.179", "196.196.34.72", "185.158.106.153", "185.158.104.161", "5.157.55.128", "196.196.220.229", "196.196.34.180", "50.3.198.89", "50.3.198.30", "45.95.118.191", "196.196.34.84", "50.3.198.193"]; //185.104.217.4
 var temp_array_proxy = [...array_proxy];
 var temp_array_pages = [];
 var array_pages_worker = [];
@@ -189,7 +192,6 @@ function oneProxy() {
 
 async function onePageToScrape() {
     if (temp_array_pages.length === 0) {
-        array_pages_worker = [];
         temp_array_pages = [];
         const array_todos = await array_todos_pendientes_scrapeo();
         if (array_todos === null) { console.log(" -- NO HAY TODOS PENDIENTES"); return null; }
@@ -197,24 +199,22 @@ async function onePageToScrape() {
         if (array_pages.length === 0) { console.log(" --- NO HAY PAGINAS PARA SCRAPEAR"); return null; }
         temp_array_pages = [...array_pages];
     }
-    await setTimeout(() => true , Math.floor((Math.random() * 500)));    
+
+    await setTimeout(() => true, Math.floor((Math.random() * 5000)));
     let position = Math.floor(Math.random() * (temp_array_pages.length - 1));
     let page = temp_array_pages[position];
-    if(array_pages_worker.includes(page._id)){
-        temp_array_pages.splice(position, 1);
+    temp_array_pages.splice(position, 1);
+
+    try {
+        const afectado = await mongo.Pagina.updateOne({ _id: page._id }, { $set: { estado_scrapeo: 'INWORKER' } });
+        if (afectado.modifiedCount !== 1 && page.estado_scrapeo!=='INWORKER') 
+        { console.log(" --- ERROR AL CAMBIAR ESTADO A LA PAGINA A SCRAPEAR"); return null; }
+        return page;
+    } catch (error) {
+        console.log(" --- ERROR AL CAMBIAR ESTADO A LA PAGINA A SCRAPEAR");
         return null;
-    }else{
-        array_pages_worker.push(page._id);        
-        try {
-            const afectado = await mongo.Pagina.updateOne({ _id: page._id }, { $set: { estado_scrapeo: 'INWORKER' } });
-            if(afectado.modifiedCount !==1 ){console.log(" --- ERROR AL CAMBIAR ESTADO A LA PAGINA A SCRAPEAR"); return null;} 
-            return page;
-        } catch (error) {
-            console.log(" --- ERROR AL CAMBIAR ESTADO A LA PAGINA A SCRAPEAR"); 
-            return null;
-        }
-    }  
-   
+    }
+
 }
 
 // async function oneAtractivo() {
@@ -238,17 +238,28 @@ async function array_paginas_pendientes_scrapeo(array_todos_pendientes) {
     try {
         const array_paginas = [];
         for (const todo of array_todos_pendientes) {
-            let ultima_pagina = await mongo.Pagina.findOne({ idrecurso: todo._id, estado_scrapeo:'PENDING' }).sort({ _id: -1 });
-            if (ultima_pagina === null) {
-                const _pagina = new mongo.Pagina({ url_actual: todo.url, idrecurso:todo._id });
-                ultima_pagina = await _pagina.save();
+            let ultima_pagina = await mongo.Pagina.findOne({ idrecurso: todo._id, estado_scrapeo: 'INWORKER' }).sort({ _id: -1 });
+            if (ultima_pagina === null) { 
+                ultima_pagina = await mongo.Pagina.findOne({ idrecurso: todo._id, estado_scrapeo: 'PENDING' }).sort({ _id: -1 });
+                if (ultima_pagina === null) {
+                    ultima_pagina = await mongo.Pagina.findOne({ idrecurso: todo._id, estado_scrapeo: 'FINALIZADO' }).sort({ _id: -1 });
+                    if (ultima_pagina === null) {
+                        const _pagina = new mongo.Pagina({ url_actual: todo.url, idrecurso: todo._id });
+                        ultima_pagina = await _pagina.save();
+                    } 
+                    continue; // No tomamos en cuenta porque ya esta finalizado
+                }
+            }else{                
+               const paginas_borradas = await mongo.Pagina.deleteMany({ idrecurso: todo._id, url_anterior:ultima_pagina.url_actual });
+               console.log("--------- PAGINAS BORRADAS : "+paginas_borradas)
             }
+            
             ultima_pagina['idrecurso'] = todo._id;
             ultima_pagina['idpais'] = todo.pais;
             ultima_pagina['idtipotodo'] = todo.tipotodo;
             array_paginas.push(ultima_pagina);
         }
-    
+
         return array_paginas;
     } catch (err) {
         throw "Error array_paginas_pendientes_scrapeo: " + err;
@@ -258,17 +269,19 @@ async function array_paginas_pendientes_scrapeo(array_todos_pendientes) {
 
 async function array_todos_pendientes_scrapeo() {
     try {
-        let Obj_Detalle_tipotodo_pais = await mongo.Detalle_tipotodo_pais.find({ estado_scrapeo: 'INWORKER' });
-        if (Obj_Detalle_tipotodo_pais.length === 0) {
-            Obj_Detalle_tipotodo_pais = await mongo.Detalle_tipotodo_pais.find({ estado_scrapeo: 'PENDING' });
-            if (Obj_Detalle_tipotodo_pais.length === 0) {  return null; }
+        let Obj_Detalle_tipotodo_pais = await mongo.Detalle_tipotodo_pais.find({ estado_scrapeo: 'PENDING' });
+        if (Obj_Detalle_tipotodo_pais.length !== 0) {           
             await mongo.Detalle_tipotodo_pais.updateMany({ estado_scrapeo: 'PENDING' }, { $set: { estado_scrapeo: 'INWORKER' } });
+        }else{
+            Obj_Detalle_tipotodo_pais = await mongo.Detalle_tipotodo_pais.find({ estado_scrapeo: 'INWORKER' });
+            if (Obj_Detalle_tipotodo_pais.length === 0) {
+                return null;       
+            }
         }
-        Obj_Detalle_tipotodo_pais = await mongo.Detalle_tipotodo_pais.find({ estado_scrapeo: 'INWORKER' });
         return Obj_Detalle_tipotodo_pais;
     } catch (err) {
         throw "Error array_todos_pendientes_scrapeo: " + err;
-    } 
+    }
 }
 
 (async () => {
@@ -283,8 +296,8 @@ async function array_todos_pendientes_scrapeo() {
         const array_paginas = await array_paginas_pendientes_scrapeo(array_todos);
         if (array_paginas.length === 0) { console.log("No hay PAGINAS pendientes de scrapear"); return; }
         temp_array_pages = [...array_paginas];
-        for (let index = 0; index < workers; index++) {            
-            setTimeout(() => workerScrapePage(`( WKR - ${index + 1} )`) , Math.floor((Math.random() * 3000))); 
+        for (let index = 0; index < workers; index++) {
+            setTimeout(() => workerScrapePage(`( WKR - ${index + 1} )`), Math.floor((Math.random() * 10000)));
         }
         worker.terminate();
     });
@@ -296,8 +309,9 @@ async function array_todos_pendientes_scrapeo() {
 
 // (async () => {
 //     await dbConnection();
-//     await mongo.Pagina.updateMany({estado_scrapeo:'INWORKER'},{$set: {estado_scrapeo: 'PENDING'}});
-//     await mongo.Detalle_tipotodo_pais.updateMany({$set: {estado_scrapeo: 'PENDING'}});
+//     await mongo.Pais.updateMany({$set: {estado_scrapeo: 'PENDING'}});
+//     // await mongo.Pagina.updateMany({estado_scrapeo:'INWORKER'},{$set: {estado_scrapeo: 'PENDING'}});
+//     // await mongo.Detalle_tipotodo_pais.updateMany({$set: {estado_scrapeo: 'PENDING'}});
 //     process.exit();
 // })();
 
