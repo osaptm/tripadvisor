@@ -300,3 +300,4 @@ async function array_todos_pendientes_scrapeo() {
 //     await mongo.Detalle_tipotodo_pais.updateMany({$set: {estado_scrapeo: 'PENDING'}});
 //     process.exit();
 // })();
+

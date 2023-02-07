@@ -44,7 +44,7 @@ async function mainWorker() {
     }
 
      /****************************/
-     // throw "GENERAMOS UN ERROR PARA PROBAR";
+     //throw "GENERAMOS UN ERROR PARA PROBAR";
      console.log(`-------->  ${workerData.nameWorker} - NRO ${paginaActualTripasvisor} = ${url}`);
      /****************************/
 
