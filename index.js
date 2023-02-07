@@ -175,7 +175,7 @@ var array_pages_worker = [];
 var array_atractivos = [];
 var skip = 0;
 var limit = 1;
-var workers = 10;
+var workers = 1;
 var contador = 0;
 
 
@@ -296,9 +296,7 @@ async function array_todos_pendientes_scrapeo() {
 
 // (async () => {
 //     await dbConnection();
-//     // await mongo.modeloAtractivo.updateMany({$set: {estado: 'PENDIENTE'}});
-//     // await mongo.modeloPagina.updateMany({}, {$unset: {html: 1, error:1}}, {multi: true});
-//     // await mongo.modeloAtractivo.updateMany({}, {$unset: {nombre: 1, html_inicial:1}}, {multi: true});
-//      await mongo.Pagina.updateMany({estado_scrapeo:'INWORKER'},{$set: {estado_scrapeo: 'PENDING'}});
+//     await mongo.Pagina.updateMany({estado_scrapeo:'INWORKER'},{$set: {estado_scrapeo: 'PENDING'}});
+//     await mongo.Detalle_tipotodo_pais.updateMany({$set: {estado_scrapeo: 'PENDING'}});
 //     process.exit();
 // })();
