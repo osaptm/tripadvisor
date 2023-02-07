@@ -44,7 +44,7 @@ async function mainWorker() {
     }
 
      /****************************/
-     console.log(`____> NUMERO PAGINA ${paginaActualTripasvisor} = ${url}`);
+     console.log(`-------->  ${workerData.nameWorker} - NRO ${paginaActualTripasvisor} = ${url}`);
      /****************************/
 
     // Buscamos si hay una siguiente pagina
@@ -89,7 +89,7 @@ async function buscarSiguientePagina(page, paginaActualTripasvisor, url) {
         await page.waitForSelector(".jemSU[data-automation='WebPresentation_PaginationLinksList']", { timeout: tiempo_espera });
         tiene_paginacion = true;
       } catch (error) {
-        console.log("____> SIN PAGINACION - POSIBLE ERROR");
+        //console.log("--------> SIN PAGINACION - POSIBLE ERROR");
         await page.waitForSelector(".jemSU", { timeout: tiempo_espera });
       }
     }
@@ -120,7 +120,6 @@ async function buscarSiguientePagina(page, paginaActualTripasvisor, url) {
               numero_anterior: paginaActualTripasvisor,
               idrecurso: ObjectId(workerData.idrecurso)
             }
-            console.log(data_);
             const Pagina = new mongo.Pagina(data_);
             // Guardar DB
             await Pagina.save();

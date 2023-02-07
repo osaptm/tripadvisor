@@ -109,23 +109,6 @@ initScrape();*/
 // const index = await Model.createIndex({ campo1: '2dsphere' });
 
 
-
-
-// const accessResource = async (atractivo) => {
-//     // Wait for the semaphore
-//     await concurrencySemaphore.acquire();
-//     // Wait for the mutex
-//     const release = await resourceMutex.acquire();
-//     try {
-//         return await oneAtractivo();
-//     } catch (error) {
-//         console.log("Error Mutex");
-//     } finally {
-//         resourceMutex.release(); // Release the mutex
-//         concurrencySemaphore.release(); // Release the semaphore
-//     }
-// };
-
 const accessResourceProxy = async () => {
     // Wait for the mutex
     const release = await resourceMutex2.acquire();
@@ -150,7 +133,7 @@ const accessResourcePage = async () => {
     }
 };
 
-async function workerScrapePage() {
+async function workerScrapePage( nameWorker ) {
     let proxy = await accessResourceProxy();
     let page = await accessResourcePage();
     if (page === null) { return; }
@@ -162,12 +145,13 @@ async function workerScrapePage() {
      'idpais':page.idpais.toString(), 
      'idtipotodo':page.idtipotodo.toString(),
      'idpage':page._id.toString(),
+     'nameWorker':nameWorker
     } });
-    console.log("---> Inicio Worker ");
+    //console.log("---> (NEW WORKER) ");
     myWorker.on('exit', async (code) => {
-        console.log("---> Fin Worker = " + page.url_actual);
+        //console.log("---> (EXIT WORKER) = " + page.url_actual);
         myWorker.terminate();
-        workerScrapePage(page.idrecurso);
+        setTimeout(() => workerScrapePage(nameWorker) , Math.floor((Math.random() * 1000)));
     });
 }
 
@@ -186,11 +170,12 @@ const array_proxy = ['196.196.220.155', '196.196.247.237', '5.157.55.218', "165.
 '196.196.220.155', '196.196.247.237', '5.157.55.218',  "165.231.95.148", "45.95.118.28", "165.231.95.17", "196.196.34.44", "185.158.104.152", "165.231.95.118", "50.3.198.225", "185.158.104.33", "185.158.106.179", "196.196.34.72", "185.158.106.153", "185.158.104.161", "5.157.55.128", "196.196.220.229", "196.196.34.180", "50.3.198.89", "50.3.198.30", "45.95.118.191", "196.196.34.84", "50.3.198.193"]; //185.104.217.4
 var temp_array_proxy = [...array_proxy];
 var temp_array_pages = [];
+var array_pages_worker = [];
 
 var array_atractivos = [];
 var skip = 0;
 var limit = 1;
-var workers = 1;
+var workers = 10;
 var contador = 0;
 
 
@@ -204,17 +189,32 @@ function oneProxy() {
 
 async function onePageToScrape() {
     if (temp_array_pages.length === 0) {
+        array_pages_worker = [];
+        temp_array_pages = [];
         const array_todos = await array_todos_pendientes_scrapeo();
-        if (array_todos === null) { console.log("No hay TODOs pendientes de scrapear"); return null; }
+        if (array_todos === null) { console.log(" -- NO HAY TODOS PENDIENTES"); return null; }
         const array_pages = await array_paginas_pendientes_scrapeo(array_todos);
-        if (array_pages.length === 0) { console.log("---> NO HAY PAGINAS PARA SCRAPEAR"); return null; }
+        if (array_pages.length === 0) { console.log(" --- NO HAY PAGINAS PARA SCRAPEAR"); return null; }
         temp_array_pages = [...array_pages];
     }
+    await setTimeout(() => true , Math.floor((Math.random() * 500)));    
     let position = Math.floor(Math.random() * (temp_array_pages.length - 1));
     let page = temp_array_pages[position];
-    temp_array_pages.splice(position, 1);
-    await mongo.Pagina.updateOne({ _id: page._id }, { $set: { estado_scrapeo: 'INWORKER' } });
-    return page;
+    if(array_pages_worker.includes(page._id)){
+        temp_array_pages.splice(position, 1);
+        return null;
+    }else{
+        array_pages_worker.push(page._id);        
+        try {
+            const afectado = await mongo.Pagina.updateOne({ _id: page._id }, { $set: { estado_scrapeo: 'INWORKER' } });
+            if(afectado.modifiedCount !==1 ){console.log(" --- ERROR AL CAMBIAR ESTADO A LA PAGINA A SCRAPEAR"); return null;} 
+            return page;
+        } catch (error) {
+            console.log(" --- ERROR AL CAMBIAR ESTADO A LA PAGINA A SCRAPEAR"); 
+            return null;
+        }
+    }  
+   
 }
 
 // async function oneAtractivo() {
@@ -257,25 +257,18 @@ async function array_paginas_pendientes_scrapeo(array_todos_pendientes) {
 
 
 async function array_todos_pendientes_scrapeo() {
-    // BUSCAR UN TODO CON ESTADO INWORKER -> SI NO EXISTE - TOMAMOS AL PRIMERO CON ESTADO PENDING
-    const session = await mongoose.startSession();
-    session.startTransaction();
     try {
-        //let Obj_Detalle_tipotodo_pais = await mongo.Detalle_tipotodo_pais.find({ estado_scrapeo: 'INWORKER' });
-        //if (Obj_Detalle_tipotodo_pais.length === 0) {
+        let Obj_Detalle_tipotodo_pais = await mongo.Detalle_tipotodo_pais.find({ estado_scrapeo: 'INWORKER' });
+        if (Obj_Detalle_tipotodo_pais.length === 0) {
             Obj_Detalle_tipotodo_pais = await mongo.Detalle_tipotodo_pais.find({ estado_scrapeo: 'PENDING' });
-            if (Obj_Detalle_tipotodo_pais.length === 0) { session.endSession(); return null; }
-            await mongo.Detalle_tipotodo_pais.updateMany({ estado_scrapeo: 'PENDING' }, { $set: { estado_scrapeo: 'INWORKER' } }, { session });
-        //}
-        await session.commitTransaction();
+            if (Obj_Detalle_tipotodo_pais.length === 0) {  return null; }
+            await mongo.Detalle_tipotodo_pais.updateMany({ estado_scrapeo: 'PENDING' }, { $set: { estado_scrapeo: 'INWORKER' } });
+        }
         Obj_Detalle_tipotodo_pais = await mongo.Detalle_tipotodo_pais.find({ estado_scrapeo: 'INWORKER' });
         return Obj_Detalle_tipotodo_pais;
     } catch (err) {
-        await session.abortTransaction();
         throw "Error array_todos_pendientes_scrapeo: " + err;
-    } finally {
-        session.endSession();
-    }
+    } 
 }
 
 (async () => {
@@ -285,18 +278,16 @@ async function array_todos_pendientes_scrapeo() {
     const worker = new Worker('./workers/worker_scrape_tipotodo_by_pais.js', { workerData: { 'ip_proxy': proxy } });
     worker.on('exit', async (code) => {
         console.log("---> FIN WORKER QUE TRAE LOS PRIMEROS ENLACES");
-
         const array_todos = await array_todos_pendientes_scrapeo();
         if (array_todos === null) { console.log("No hay TODOs pendientes de scrapear"); return; }
         const array_paginas = await array_paginas_pendientes_scrapeo(array_todos);
         if (array_paginas.length === 0) { console.log("No hay PAGINAS pendientes de scrapear"); return; }
         temp_array_pages = [...array_paginas];
         for (let index = 0; index < workers; index++) {            
-            workerScrapePage();
+            setTimeout(() => workerScrapePage(`( WKR - ${index + 1} )`) , Math.floor((Math.random() * 3000))); 
         }
         worker.terminate();
     });
-
 
 })();
 
