@@ -10,7 +10,6 @@ const { Worker, workerData } = require('worker_threads');
 // Worker = Para crear un nuevo Trabajador, workerData = Para tener data disponible en todos los workers
 
 const mutex = require('async-mutex').Mutex;
-const semaphore = require('async-mutex').Semaphore;
 // async-mutex sirve para controlar la concurrencia y accesos a recursos, con semaforos ys tiempos de espera predefinidos
 
 const cheerio = require('cheerio'); // Para trabajas con etiquetas html
@@ -20,15 +19,10 @@ const mongoose = require('mongoose');
 const { ObjectId } = require('mongoose').Types; // Para usar ObjectId y comprar
 require('dotenv').config(); // Variables de entorno
 
-const resourceMutex = new mutex(); // Create a mutex to control access to the resource 
-// Create a semaphore to control the number of concurrent accesses
-const concurrencySemaphore = new semaphore(1); // Max 1 concurrent accesses
 
 const resourceMutex2 = new mutex();
-const concurrencySemaphore2 = new semaphore(1);
-
 const resourceMutex3 = new mutex();
-const concurrencySemaphore3 = new semaphore(1);
+
 
 
 // // Create a function to access the resource
@@ -133,8 +127,6 @@ initScrape();*/
 // };
 
 const accessResourceProxy = async () => {
-    // Wait for the semaphore
-    await concurrencySemaphore2.acquire();
     // Wait for the mutex
     const release = await resourceMutex2.acquire();
     try {
@@ -142,22 +134,19 @@ const accessResourceProxy = async () => {
     } catch (error) {
         console.log("Error Mutex accessResourceProxy "+error);
     } finally {
-        resourceMutex2.release(); // Release the mutex
-        concurrencySemaphore2.release(); // Release the semaphore
+        release(); // Release the mutex  
     }
 };
 
 
 const accessResourcePage = async () => {
-    await concurrencySemaphore3.acquire();
     const release = await resourceMutex3.acquire();
     try {
         return await onePageToScrape();
     } catch (error) {
         console.log("Error Mutex accessResourcePage "+error);
     } finally {
-        resourceMutex3.release(); // Release the mutex
-        concurrencySemaphore3.release(); // Release the semaphore
+        release(); // Release the mutex
     }
 };
 
@@ -193,7 +182,8 @@ async function workerScrapePage() {
 // }
 
 
-const array_proxy = ['196.196.220.155', '196.196.247.237', '5.157.55.218', '185.104.217.42', "165.231.95.148", "45.95.118.28", "165.231.95.17", "196.196.34.44", "185.158.104.152", "165.231.95.118", "50.3.198.225", "185.158.104.33", "185.158.106.179", "196.196.34.72", "185.158.106.153", "185.158.104.161", "5.157.55.128", "196.196.220.229", "196.196.34.180", "50.3.198.89", "50.3.198.30", "45.95.118.191", "196.196.34.84", "50.3.198.193"];
+const array_proxy = ['196.196.220.155', '196.196.247.237', '5.157.55.218', "165.231.95.148", "45.95.118.28", "165.231.95.17", "196.196.34.44", "185.158.104.152", "165.231.95.118", "50.3.198.225", "185.158.104.33", "185.158.106.179", "196.196.34.72", "185.158.106.153", "185.158.104.161", "5.157.55.128", "196.196.220.229", "196.196.34.180", "50.3.198.89", "50.3.198.30", "45.95.118.191", "196.196.34.84", "50.3.198.193",
+'196.196.220.155', '196.196.247.237', '5.157.55.218',  "165.231.95.148", "45.95.118.28", "165.231.95.17", "196.196.34.44", "185.158.104.152", "165.231.95.118", "50.3.198.225", "185.158.104.33", "185.158.106.179", "196.196.34.72", "185.158.106.153", "185.158.104.161", "5.157.55.128", "196.196.220.229", "196.196.34.180", "50.3.198.89", "50.3.198.30", "45.95.118.191", "196.196.34.84", "50.3.198.193"]; //185.104.217.4
 var temp_array_proxy = [...array_proxy];
 var temp_array_pages = [];
 
@@ -258,6 +248,7 @@ async function array_paginas_pendientes_scrapeo(array_todos_pendientes) {
             ultima_pagina['idtipotodo'] = todo.tipotodo;
             array_paginas.push(ultima_pagina);
         }
+    
         return array_paginas;
     } catch (err) {
         throw "Error array_paginas_pendientes_scrapeo: " + err;
@@ -270,12 +261,12 @@ async function array_todos_pendientes_scrapeo() {
     const session = await mongoose.startSession();
     session.startTransaction();
     try {
-        let Obj_Detalle_tipotodo_pais = await mongo.Detalle_tipotodo_pais.find({ estado_scrapeo: 'INWORKER' });
-        if (Obj_Detalle_tipotodo_pais.length === 0) {
+        //let Obj_Detalle_tipotodo_pais = await mongo.Detalle_tipotodo_pais.find({ estado_scrapeo: 'INWORKER' });
+        //if (Obj_Detalle_tipotodo_pais.length === 0) {
             Obj_Detalle_tipotodo_pais = await mongo.Detalle_tipotodo_pais.find({ estado_scrapeo: 'PENDING' });
             if (Obj_Detalle_tipotodo_pais.length === 0) { session.endSession(); return null; }
             await mongo.Detalle_tipotodo_pais.updateMany({ estado_scrapeo: 'PENDING' }, { $set: { estado_scrapeo: 'INWORKER' } }, { session });
-        }
+        //}
         await session.commitTransaction();
         Obj_Detalle_tipotodo_pais = await mongo.Detalle_tipotodo_pais.find({ estado_scrapeo: 'INWORKER' });
         return Obj_Detalle_tipotodo_pais;
@@ -313,8 +304,10 @@ async function array_todos_pendientes_scrapeo() {
 
 
 // (async () => {
+//     await dbConnection();
 //     // await mongo.modeloAtractivo.updateMany({$set: {estado: 'PENDIENTE'}});
 //     // await mongo.modeloPagina.updateMany({}, {$unset: {html: 1, error:1}}, {multi: true});
 //     // await mongo.modeloAtractivo.updateMany({}, {$unset: {nombre: 1, html_inicial:1}}, {multi: true});
+//      await mongo.Pagina.updateMany({estado_scrapeo:'INWORKER'},{$set: {estado_scrapeo: 'PENDING'}});
 //     process.exit();
 // })();

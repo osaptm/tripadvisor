@@ -78,8 +78,14 @@ async function guardar_array_tipotodo(objCategories, obj_pais) {
     const array = objCategories.categoria_todo;
     for await(let element of array) {
       // init for await
-      const exsite = await mongo.Tipotodo.findOne({ nombre: element.title });
-      if (exsite !== null) continue;
+      const exsite_tipotodo = await mongo.Tipotodo.findOne({ nombre: element.title });
+      if (exsite_tipotodo !== null) {
+        const exsite_detalle = await mongo.Detalle_tipotodo_pais.findOne({ tipotodo:exsite_tipotodo._id , pais:obj_pais._id});
+        if (exsite_detalle === null) {
+          const _detalle_tipotodo_pais = new mongo.Detalle_tipotodo_pais({url: element.enlace, tipotodo:exsite_tipotodo._id, pais:obj_pais._id});
+          await _detalle_tipotodo_pais.save();
+        } continue;
+      }
       const session = await mongoose.startSession();
       session.startTransaction();
       try {
