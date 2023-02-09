@@ -267,7 +267,15 @@ async function workerScrapeAtraccionesPage(nameWorker) {
                 'nameWorker': nameWorker
             }
         });
-    //console.log("---> (NEW WORKER) ");
+    console.log({
+        'ip_proxy': proxy,
+        'url': page.url_actual,
+        'idpage': page._id.toString(),
+        'idpais': obj_tipotodo_pais.pais.toString(),
+        'idtipotodo': obj_tipotodo_pais.tipotodo.toString(),
+        'idtipotodo_pais': obj_tipotodo_pais._id.toString(),
+        'nameWorker': nameWorker
+    });
     myWorker.on('exit', async (code) => {
         //console.log("---> (EXIT WORKER) = " + page.url_actual);
         myWorker.terminate();
@@ -369,7 +377,7 @@ const array_idrecursos = ["63e2cc5bd907c58050596c62","63e2cc5bd907c58050596c66",
     
     let idrecurso = array_idrecursos[0];
    const paginas_pendientes = await mongo.Pagina.updateMany({idrecurso:ObjectId(idrecurso)},{$set:{estado_scrapeo_page:'PENDING'}});
-   await mongo.Todo_prueba.deleteMany({});
+   //await mongo.Todo_prueba.deleteMany({});
    await mongo.Detalle_tipotodo_todo.deleteMany({idtipotodo_pais:ObjectId(idrecurso)});
     
     let paginas_raspar = await mongo.Pagina.find({ idrecurso: ObjectId(idrecurso), estado_scrapeo_page: 'PENDING' });
@@ -381,7 +389,19 @@ const array_idrecursos = ["63e2cc5bd907c58050596c62","63e2cc5bd907c58050596c66",
         }
     }else{
         console.log("SIN PAGINAS PARA RASPAR");
-    } //git clone https://github.com/osaptm/tripadvisor
+    } 
+    //git clone https://github.com/osaptm/tripadvisor
+
+
+    // let contador_iguales = 0;
+    // let todo_prueba = await mongo.Todo_prueba.find({});
+    // if(todo_prueba.length!==0){
+    //     for (let index = 0; index < todo_prueba.length; index++) {
+    //         let existe = await mongo.Todo.findOne({url: todo_prueba[index].url});
+    //         if(existe !== null) contador_iguales ++;
+    //     }
+    // }
+    // console.log(todo_prueba.length+"-"+contador_iguales)
 
 })();
 

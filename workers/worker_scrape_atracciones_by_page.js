@@ -105,30 +105,28 @@ async function extraeAtractivos(page) {
     // Recorrer todo el arreglo
     let aux = 0; let nuevos = 0; let detalles = 0;
     for await (let element of elements) { aux++;
-      //const article = await element.$('article');
-      //const html_article = await (await article.getProperty('innerHTML')).jsonValue();
       const secondDiv = await element.$('article > div:nth-of-type(2)');
       const firstH3 = await secondDiv.$('h3');
       const firstA = await secondDiv.$('a:nth-of-type(1)');
       const h3Atractivo = await (await firstH3.getProperty('textContent')).jsonValue();
       const hrefAtractivo = await (await firstA.getProperty('href')).jsonValue();
       
-      var obj_todo = null;
+      let obj_todo = null;
       if (hrefAtractivo.trim() !== "") {
-
-        const data1 = {
-          nombre: nombre_final_sin_numeracion(h3Atractivo),
-          url: hrefAtractivo,
-          pais: ObjectId(workerData.idpais),
-        }
-
-        const document1 = await mongo.Todo_prueba.create([data1]); 
+        // const data1 = {
+        //   nombre: nombre_final_sin_numeracion(h3Atractivo),
+        //   url: hrefAtractivo,
+        //   pais: ObjectId(workerData.idpais),
+        // } 
+        // const document1 = await mongo.Todo_prueba.create([data1]); 
 
         obj_todo = await mongo.Todo.findOne({ url: hrefAtractivo });
         //console.log(">>>>> EXISTE "+obj_todo._id);
       } else {
         throw "Error hrefAtractivo VACIO";
       }
+
+
 
       if (obj_todo === null) {
         nuevos++;
@@ -140,20 +138,33 @@ async function extraeAtractivos(page) {
           }
 
           const document = await mongo.Todo.create([data]); 
-          const _Detalle_tipotodo_todo = new mongo.Detalle_tipotodo_todo({ id_tipotodo: ObjectId(workerData.idtipotodo), id_todo: document[0]._id, idtipotodo_pais: ObjectId(workerData.idtipotodo_pais)});
+          const _Detalle_tipotodo_todo = new mongo.Detalle_tipotodo_todo({ 
+            id_tipotodo: ObjectId(workerData.idtipotodo), 
+            id_todo: document[0]._id, 
+            idtipotodo_pais: ObjectId(workerData.idtipotodo_pais)
+          });
           const registro = await _Detalle_tipotodo_todo.save();
+          detalles ++;
 
         } catch (err) {
           throw "Error guardar TODO y su detalle: " + err;
         } 
 
       } else {
-        let existe_Detalle_tipotodo_todo = await mongo.Detalle_tipotodo_todo.findOne({ id_tipotodo: ObjectId(workerData.idtipotodo), id_todo: obj_todo._id,  idtipotodo_pais: ObjectId(workerData.idtipotodo_pais)});              
+        let existe_Detalle_tipotodo_todo = await mongo.Detalle_tipotodo_todo.findOne({ 
+          id_tipotodo: ObjectId(workerData.idtipotodo), 
+          id_todo: obj_todo._id,  
+          idtipotodo_pais: ObjectId(workerData.idtipotodo_pais)
+        });    
+
         if (existe_Detalle_tipotodo_todo === null) {  
           detalles ++;       
-          const _Detalle_tipotodo_todo = new mongo.Detalle_tipotodo_todo({ id_tipotodo: ObjectId(workerData.idtipotodo), id_todo: obj_todo._id, idtipotodo_pais: ObjectId(workerData.idtipotodo_pais)});
+          const _Detalle_tipotodo_todo = new mongo.Detalle_tipotodo_todo({ 
+            id_tipotodo: ObjectId(workerData.idtipotodo), 
+            id_todo: obj_todo._id, 
+            idtipotodo_pais: ObjectId(workerData.idtipotodo_pais)});            
           const registro = await _Detalle_tipotodo_todo.save();
-          //console.log(aux + "--------------> [DETALLE AGREGADO]"+ registro);
+          console.log(aux + "--------------> [DETALLE AGREGADO]"+ registro);
         }
 
       }
