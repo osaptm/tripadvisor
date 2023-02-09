@@ -19,11 +19,21 @@ const mongoose = require('mongoose');
 const { ObjectId } = require('mongoose').Types; // Para usar ObjectId y comprar
 require('dotenv').config(); // Variables de entorno
 
-
+const resourceMutex = new mutex();
 const resourceMutex2 = new mutex();
 const resourceMutex3 = new mutex();
 
+const array_proxy = ['196.196.220.155', '196.196.247.237', '5.157.55.218', "165.231.95.148", "45.95.118.28", "165.231.95.17", "196.196.34.44", "185.158.104.152", "165.231.95.118", "50.3.198.225", "185.158.104.33", "185.158.106.179", "196.196.34.72", "185.158.106.153", "185.158.104.161", "5.157.55.128", "196.196.220.229", "196.196.34.180", "50.3.198.89", "50.3.198.30", "45.95.118.191", "196.196.34.84", "50.3.198.193",
+    '196.196.220.155', '196.196.247.237', '5.157.55.218', "165.231.95.148", "45.95.118.28", "165.231.95.17", "196.196.34.44", "185.158.104.152", "165.231.95.118", "50.3.198.225", "185.158.104.33", "185.158.106.179", "196.196.34.72", "185.158.106.153", "185.158.104.161", "5.157.55.128", "196.196.220.229", "196.196.34.180", "50.3.198.89", "50.3.198.30", "45.95.118.191", "196.196.34.84", "50.3.198.193"]; //185.104.217.4
+var temp_array_proxy = [...array_proxy];
+var temp_array_pages = [];
+var array_todos_pais = [];
 
+var array_atractivos = [];
+var skip = 0;
+var limit = 1;
+var workers = 1;
+var contador = 0;
 
 // // Create a function to access the resource
 // const accessResource = async () => {
@@ -108,6 +118,18 @@ initScrape();*/
 // //Crear Indice Espacial
 // const index = await Model.createIndex({ campo1: '2dsphere' });
 
+const accessResourceTodoPais = async () => {
+    // Wait for the mutex
+    const release = await resourceMutex.acquire();
+    try {
+        return oneTodoPais();
+    } catch (error) {
+        console.log("Error Mutex accessResourceProxy " + error);
+    } finally {
+        release(); // Release the mutex  
+    }
+};
+
 
 const accessResourceProxy = async () => {
     // Wait for the mutex
@@ -133,54 +155,13 @@ const accessResourcePage = async () => {
     }
 };
 
-async function workerScrapePage(nameWorker) {
-    let proxy = await accessResourceProxy();
-    let page = await accessResourcePage();
-    if (page === null) { return; }
-    const myWorker = new Worker('./workers/worker_scrape_atracciones_by_todo.js',
-        {
-            workerData: {
-                'ip_proxy': proxy,
-                'url': page.url_actual,
-                'pagina_actual': page.numero_actual,
-                'idrecurso': page.idrecurso.toString(),
-                'idpais': page.idpais.toString(),
-                'idtipotodo': page.idtipotodo.toString(),
-                'idpage': page._id.toString(),
-                'nameWorker': nameWorker
-            }
-        });
-    //console.log("---> (NEW WORKER) ");
-    myWorker.on('exit', async (code) => {
-        //console.log("---> (EXIT WORKER) = " + page.url_actual);
-        myWorker.terminate();
-        setTimeout(() => workerScrapePage(nameWorker), Math.floor((Math.random() * 1000)));
-    });
+function oneTodoPais() {
+    if (array_todos_pais.length === 0) { return null; }
+    let position = Math.floor(Math.random() * (array_todos_pais.length - 1));
+    let todo_pais = array_todos_pais[position];
+    array_todos_pais.splice(position, 1);
+    return todo_pais;
 }
-
-// async function trae_atractivo_random() {
-//     const atractivo = await mongo.modeloAtractivo.aggregate([
-//         { $match: { estado: 'PENDIENTE' } },
-//         { $sample: { size: 1 } }
-//     ]);
-//     await mongo.modeloAtractivo.updateOne({ _id: atractivo[0]._id }, { $set: { estado: 'INWORKER' } });
-//     atractivo[0]['_id'] = atractivo[0]['_id'].toString();
-//     return atractivo;
-// }
-
-
-const array_proxy = ['196.196.220.155', '196.196.247.237', '5.157.55.218', "165.231.95.148", "45.95.118.28", "165.231.95.17", "196.196.34.44", "185.158.104.152", "165.231.95.118", "50.3.198.225", "185.158.104.33", "185.158.106.179", "196.196.34.72", "185.158.106.153", "185.158.104.161", "5.157.55.128", "196.196.220.229", "196.196.34.180", "50.3.198.89", "50.3.198.30", "45.95.118.191", "196.196.34.84", "50.3.198.193",
-    '196.196.220.155', '196.196.247.237', '5.157.55.218', "165.231.95.148", "45.95.118.28", "165.231.95.17", "196.196.34.44", "185.158.104.152", "165.231.95.118", "50.3.198.225", "185.158.104.33", "185.158.106.179", "196.196.34.72", "185.158.106.153", "185.158.104.161", "5.157.55.128", "196.196.220.229", "196.196.34.180", "50.3.198.89", "50.3.198.30", "45.95.118.191", "196.196.34.84", "50.3.198.193"]; //185.104.217.4
-var temp_array_proxy = [...array_proxy];
-var temp_array_pages = [];
-var array_pages_worker = [];
-
-var array_atractivos = [];
-var skip = 0;
-var limit = 1;
-var workers = 1;
-var contador = 0;
-
 
 function oneProxy() {
     if (temp_array_proxy.length === 0) { temp_array_proxy = [...array_proxy]; }
@@ -207,8 +188,7 @@ async function onePageToScrape() {
 
     try {
         const afectado = await mongo.Pagina.updateOne({ _id: page._id }, { $set: { estado_scrapeo: 'INWORKER' } });
-        if (afectado.modifiedCount !== 1 && page.estado_scrapeo!=='INWORKER') 
-        { console.log(" --- ERROR AL CAMBIAR ESTADO A LA PAGINA A SCRAPEAR"); return null; }
+        if (afectado.modifiedCount !== 1 && page.estado_scrapeo !== 'INWORKER') { console.log(" --- ERROR AL CAMBIAR ESTADO A LA PAGINA A SCRAPEAR"); return null; }
         return page;
     } catch (error) {
         console.log(" --- ERROR AL CAMBIAR ESTADO A LA PAGINA A SCRAPEAR");
@@ -217,43 +197,27 @@ async function onePageToScrape() {
 
 }
 
-// async function oneAtractivo() {
-//     if (array_atractivos === null) return null;
-//     if (array_atractivos.length === 0) { skip += limit; await get_array_atractivos(skip); }
-//     const position = Math.floor(Math.random() * (array_atractivos.length - 1));
-//     let element = array_atractivos[position]._doc;
-//     array_atractivos.splice(position, 1);
-//     element._id = element['_id'].toString();
-//     const proxy = await accessResourceProxy();
-//     contador++; // contar numero total de atractivos recorridos
-//     return { 'atractivo': element, 'ip_proxy': proxy };
-// }
-
-// async function get_array_atractivos(skip) {
-//     console.clear(); console.log(contador);
-//     array_atractivos = await mongo.modeloAtractivo.find({}, { "_id": 1, "url": 1 }).skip(skip).limit(limit);
-// }
-
 async function array_paginas_pendientes_scrapeo(array_todos_pendientes) {
     try {
+        //const xxx = await mongo.Detalle_tipotodo_pais.find({ _id: ObjectId('63e2cdc3b457b07198911c01'), estado_scrapeo: 'INWORKER' });
         const array_paginas = [];
-        for (const todo of array_todos_pendientes) {
+        for (const todo of array_todos_pendientes) { // array_todos_pendientes
             let ultima_pagina = await mongo.Pagina.findOne({ idrecurso: todo._id, estado_scrapeo: 'INWORKER' }).sort({ _id: -1 });
-            if (ultima_pagina === null) { 
+            if (ultima_pagina === null) {
                 ultima_pagina = await mongo.Pagina.findOne({ idrecurso: todo._id, estado_scrapeo: 'PENDING' }).sort({ _id: -1 });
                 if (ultima_pagina === null) {
                     ultima_pagina = await mongo.Pagina.findOne({ idrecurso: todo._id, estado_scrapeo: 'FINALIZADO' }).sort({ _id: -1 });
                     if (ultima_pagina === null) {
                         const _pagina = new mongo.Pagina({ url_actual: todo.url, idrecurso: todo._id });
                         ultima_pagina = await _pagina.save();
-                    } 
+                    }
                     continue; // No tomamos en cuenta porque ya esta finalizado
                 }
-            }else{                
-               const paginas_borradas = await mongo.Pagina.deleteMany({ idrecurso: todo._id, url_anterior:ultima_pagina.url_actual });
-               console.log("--------- PAGINAS BORRADAS : "+paginas_borradas)
+            } else {
+                const paginas_borradas = await mongo.Pagina.deleteMany({ idrecurso: todo._id, url_anterior: ultima_pagina.url_actual });
+                console.log("--------- PAGINAS BORRADAS : " + paginas_borradas.deletedCount)
             }
-            
+
             ultima_pagina['idrecurso'] = todo._id;
             ultima_pagina['idpais'] = todo.pais;
             ultima_pagina['idtipotodo'] = todo.tipotodo;
@@ -270,12 +234,12 @@ async function array_paginas_pendientes_scrapeo(array_todos_pendientes) {
 async function array_todos_pendientes_scrapeo() {
     try {
         let Obj_Detalle_tipotodo_pais = await mongo.Detalle_tipotodo_pais.find({ estado_scrapeo: 'PENDING' });
-        if (Obj_Detalle_tipotodo_pais.length !== 0) {           
+        if (Obj_Detalle_tipotodo_pais.length !== 0) {
             await mongo.Detalle_tipotodo_pais.updateMany({ estado_scrapeo: 'PENDING' }, { $set: { estado_scrapeo: 'INWORKER' } });
-        }else{
+        } else {
             Obj_Detalle_tipotodo_pais = await mongo.Detalle_tipotodo_pais.find({ estado_scrapeo: 'INWORKER' });
             if (Obj_Detalle_tipotodo_pais.length === 0) {
-                return null;       
+                return null;
             }
         }
         return Obj_Detalle_tipotodo_pais;
@@ -284,34 +248,134 @@ async function array_todos_pendientes_scrapeo() {
     }
 }
 
-(async () => {
-
-    await dbConnection();
+async function workerScrapePage(nameWorker) {
     let proxy = await accessResourceProxy();
-    const worker = new Worker('./workers/worker_scrape_tipotodo_by_pais.js', { workerData: { 'ip_proxy': proxy } });
-    worker.on('exit', async (code) => {
-        console.log("---> FIN WORKER QUE TRAE LOS PRIMEROS ENLACES");
-        const array_todos = await array_todos_pendientes_scrapeo();
-        if (array_todos === null) { console.log("No hay TODOs pendientes de scrapear"); return; }
-        const array_paginas = await array_paginas_pendientes_scrapeo(array_todos);
-        if (array_paginas.length === 0) { console.log("No hay PAGINAS pendientes de scrapear"); return; }
-        temp_array_pages = [...array_paginas];
-        for (let index = 0; index < workers; index++) {
-            setTimeout(() => workerScrapePage(`( WKR - ${index + 1} )`), Math.floor((Math.random() * 10000)));
-        }
-        worker.terminate();
+    let page = await accessResourcePage();
+    if (page === null) { return; }
+    const myWorker = new Worker('./workers/worker_scrape_atracciones_by_todo.js',
+        {
+            workerData: {
+                'ip_proxy': proxy,
+                'url': page.url_actual,
+                'pagina_actual': page.numero_actual,
+                'idrecurso': page.idrecurso.toString(),
+                'idpais': page.idpais.toString(),
+                'idtipotodo': page.idtipotodo.toString(),
+                'idpage': page._id.toString(),
+                'nameWorker': nameWorker
+            }
+        });
+    //console.log("---> (NEW WORKER) ");
+    myWorker.on('exit', async (code) => {
+        //console.log("---> (EXIT WORKER) = " + page.url_actual);
+        myWorker.terminate();
+        setTimeout(() => workerScrapePage(nameWorker), Math.floor((Math.random() * 1000)));
     });
+}
 
-})();
-
-
-
+async function workerScrapeNroTodos(nameWorker) {
+    let proxy = await accessResourceProxy();
+    let todoPais = await accessResourceTodoPais();
+    if (todoPais === null) { return; }
+    const myWorker = new Worker('./workers/worker_scrape_nro_todos.js',
+        {
+            workerData: {
+                'ip_proxy': proxy,
+                'url': todoPais.url,
+                'idtodopais': todoPais._id.toString(),
+                'nameWorker': nameWorker
+            }
+        });
+    //console.log("---> (NEW WORKER) ");
+    myWorker.on('exit', async (code) => {
+        //console.log("---> (EXIT WORKER) = " + page.url_actual);
+        myWorker.terminate();
+        setTimeout(() => workerScrapeNroTodos(nameWorker), Math.floor((Math.random() * 1000)));
+    });
+}
 
 // (async () => {
 //     await dbConnection();
-//     await mongo.Pais.updateMany({$set: {estado_scrapeo: 'PENDING'}});
-//     // await mongo.Pagina.updateMany({estado_scrapeo:'INWORKER'},{$set: {estado_scrapeo: 'PENDING'}});
-//     // await mongo.Detalle_tipotodo_pais.updateMany({$set: {estado_scrapeo: 'PENDING'}});
-//     process.exit();
+//     let proxy = await accessResourceProxy();
+//     const worker = new Worker('./workers/worker_scrape_tipotodo_by_pais.js', { workerData: { 'ip_proxy': proxy } });
+//     worker.on('exit', async (code) => {
+//         console.log("---> FIN WORKER QUE TRAE LOS PRIMEROS ENLACES");
+//         const array_todos = await array_todos_pendientes_scrapeo();
+//         if (array_todos === null) { console.log("No hay TODOs pendientes de scrapear"); return; }
+//         const array_paginas = await array_paginas_pendientes_scrapeo(array_todos);
+//         if (array_paginas.length === 0) { console.log("No hay PAGINAS pendientes de scrapear"); return; }
+//         temp_array_pages = [...array_paginas];
+//         for (let index = 0; index < workers; index++) {
+//             setTimeout(() => workerScrapePage(`( WKR - ${index + 1} )`), Math.floor((Math.random() * 10000)));
+//         }
+//         worker.terminate();
+//     });
 // })();
+
+
+
+
+(async () => {
+    await dbConnection();
+
+    // var contadorReg = 0;
+    // const consulta = await mongo.Detalle_tipotodo_todo.find({});
+    // const total_ = consulta.length
+    // for (let index = 0; index < total_; index++) {
+    //     console.clear();
+    //     console.log(total_ ,' - ',index);
+    //     const buscarTodo = await mongo.Todo.findOne({ _id: consulta[index].id_todo})
+    //     if (buscarTodo !== null) {
+    //         const buscarTodoPais = await mongo.Detalle_tipotodo_pais.findOne({ pais: buscarTodo.pais, tipotodo:consulta[index].id_tipotodo});
+    //         if (buscarTodoPais !== null) {
+    //             await mongo.Detalle_tipotodo_todo.updateOne({_id:consulta[index]._id},{$set: {idtipotodo_pais: buscarTodoPais._id}});
+    //             contadorReg++;
+    //         }
+    //     } continue;
+    // }
+    // console.log(total_ ,' - ',contadorReg);
+
+
+    
+    // const consulta = await mongo.Detalle_tipotodo_pais.find({}); //{todos_to_scrape : { $eq : 0 }}
+    // if(consulta.length!==0){
+    //     console.log(consulta.length);
+    //     array_todos_pais = [...consulta];
+    //     for (let index = 0; index < workers; index++) {
+    //         workerScrapeNroTodos(`( WKR - ${index + 1} )`);
+    //     }
+    // }else{
+    //     console.log(consulta.length);
+    // }
+
+
+//    const consulta = await mongo.Detalle_tipotodo_pais.find({estado_scrapeo:'FINALIZADO'}); 
+//    if(consulta.length!==0){
+//     for (let index = 0; index < consulta.length; index++) {
+//         const paginas = await mongo.Pagina.find({idrecurso: consulta[index]._id});
+//         const enteroPag = Math.ceil(consulta[index].todos_to_scrape / 30) || 1 ;
+//         if( enteroPag!== paginas.length){
+//             console.log(consulta[index]._id+` Paginas Previstas ${enteroPag } / ${paginas.length} `+consulta[index].url);
+//         }
+//     }
+//     process.exit();
+//    }
+
+
+//    const consulta = await mongo.Detalle_tipotodo_pais.find({estado_scrapeo:'FINALIZADO'}); 
+//    if(consulta.length!==0){
+//     for (let index = 0; index < consulta.length; index++) {
+//         const todos = await mongo.Detalle_tipotodo_todo.find({idtipotodo_pais: consulta[index]._id});
+//         const cantidad_esperada = consulta[index].todos_to_scrape ;
+//         if( cantidad_esperada!== todos.length){
+//             console.log(consulta[index]._id+` Todos Previstos ${cantidad_esperada } / ${todos.length} `+consulta[index].url);
+//         }
+//     }
+//    }
+
+// const consulta = await mongo.Detalle_tipotodo_todo.find({idtipotodo_pais:ObjectId('63e2cd7c7c8e10c9e094d5f6')})
+// .populate('id_todo'); 
+// console.log(consulta)
+
+})();
 

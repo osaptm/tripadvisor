@@ -1,7 +1,7 @@
 const puppeteer = require('puppeteer');
 const proxyChain = require('proxy-chain');
 const { workerData } = require('worker_threads');
-const { dbConnection } = require('../database/config'); // Base de Datoos Mongo
+const { dbConnection, dbSession } = require('../database/config'); // Base de Datoos Mongo
 const mongo = require('../models');
 const mongoose = require('mongoose');
 const { ObjectId } = require('mongoose').Types; // Para usar ObjectId y comprar
@@ -44,7 +44,7 @@ async function mainWorker() {
     }
 
      /****************************/
-     throw "GENERAMOS UN ERROR PARA PROBAR";
+     //throw "GENERAMOS UN ERROR PARA PROBAR";
      console.log(`-------->  ${workerData.nameWorker} - NRO ${paginaActualTripasvisor} = ${url}`);
      /****************************/
 
@@ -156,8 +156,8 @@ async function extraeAtractivos(page) { //idPagina
     const elements = await page.$$(".jemSU[data-automation='WebPresentation_SingleFlexCardSection']");
     // Recorrer todo el arreglo
     for await (let element of elements) {
-      const article = await element.$('article');
-      const html_article = await (await article.getProperty('innerHTML')).jsonValue();
+      //const article = await element.$('article');
+      //const html_article = await (await article.getProperty('innerHTML')).jsonValue();
       const secondDiv = await element.$('article > div:nth-of-type(2)');
       const firstH3 = await secondDiv.$('h3');
       const firstA = await secondDiv.$('a:nth-of-type(1)');
@@ -165,30 +165,54 @@ async function extraeAtractivos(page) { //idPagina
       const hrefAtractivo = await (await firstA.getProperty('href')).jsonValue();
 
       let obj_todo = null;
-      if(h3Atractivo.trim()!=="" && hrefAtractivo.trim()!==""){
-         obj_todo = await mongo.Todo.findOne({ url: hrefAtractivo });
+      if(hrefAtractivo.trim()!==""){
+         obj_todo = await mongo.Todo.findOne({ url: hrefAtractivo});
       }else{
-        throw "Error extraeAtractivos h3Atractivo hrefAtractivo vacios";
+        throw "Error extraeAtractivos hrefAtractivo VACIO";
       }      
 
       if (obj_todo === null) {
-        // Generar la data a guardar
-        const data = {
-          nombre: nombre_final_sin_numeracion(h3Atractivo),
-          url: hrefAtractivo,
-          pais: ObjectId(workerData.idpais),
-        }
-        const Atractivo = new mongo.Todo(data);
-        const obj_Atractivo = await Atractivo.save();
 
-        const _Detalle_tipotodo_todo = new mongo.Detalle_tipotodo_todo({ id_tipotodo: ObjectId(workerData.idtipotodo) , id_todo:obj_Atractivo._id });
-        await _Detalle_tipotodo_todo.save();
+          const session = await dbSession();
+          session.startTransaction();
+          
+          try {
+              const data = {
+                nombre: nombre_final_sin_numeracion(h3Atractivo),
+                url: hrefAtractivo,
+                pais: ObjectId(workerData.idpais),
+              }
+
+              mongo.Todo.create([data], { session: session }).then(async function(document) {            
+                
+                await mongo.Detalle_tipotodo_todo.create([{ id_tipotodo: ObjectId(workerData.idtipotodo) , id_todo:document[0]._id }], { session: session });  
+                await session.commitTransaction(); 
+
+              }).catch(async function(err) {
+                console.log(err)
+                await session.abortTransaction();
+              });  
+
+          } catch (err) {
+
+            await session.abortTransaction();
+            throw "Error guardar TODO y su detalle: " +err;
+
+          } finally {
+
+            session.endSession();
+
+          }
+        
+
       }else{
+
         let existe_Detalle_tipotodo_todo = await mongo.Detalle_tipotodo_todo.findOne({ id_tipotodo: ObjectId(workerData.idtipotodo), id_todo:obj_todo._id });
         if (existe_Detalle_tipotodo_todo === null) {
           const _Detalle_tipotodo_todo = new mongo.Detalle_tipotodo_todo({ id_tipotodo: ObjectId(workerData.idtipotodo), id_todo:obj_todo._id });
           await _Detalle_tipotodo_todo.save();
         }
+
       }
     }
  
