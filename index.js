@@ -379,7 +379,7 @@ const array_idrecursos = ["63e2cc5bd907c58050596c62","63e2cc5bd907c58050596c66",
    const paginas_pendientes = await mongo.Pagina.updateMany({idrecurso:ObjectId(idrecurso)},{$set:{estado_scrapeo_page:'PENDING'}});
    //await mongo.Todo_prueba.deleteMany({});
    await mongo.Detalle_tipotodo_todo.deleteMany({idtipotodo_pais:ObjectId(idrecurso)});
-    
+
     let paginas_raspar = await mongo.Pagina.find({ idrecurso: ObjectId(idrecurso), estado_scrapeo_page: 'PENDING' });
     if(paginas_raspar.length!==0){
         console.log(paginas_raspar.length);

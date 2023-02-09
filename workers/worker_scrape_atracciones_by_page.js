@@ -3,6 +3,7 @@ const proxyChain = require('proxy-chain');
 const { workerData } = require('worker_threads');
 const { dbConnection, dbSession } = require('../database/config'); // Base de Datoos Mongo
 const mongo = require('../models');
+const mongoose = require('mongoose');
 const { ObjectId } = require('mongoose').Types; // Para usar ObjectId y comprar
 require('dotenv').config();
 
@@ -81,6 +82,8 @@ async function mainWorker() {
 
   } finally {
 
+    mongoose.connection.close(); 
+    console.log("Ceraramos Mongo");
     await mongo.Pagina.updateOne({ _id: ObjectId(workerData.idpage) }, { $set: { estado_scrapeo_page: 'FINALIZADO' } });
 
   }
@@ -165,11 +168,17 @@ async function extraeAtractivos(page) {
             idtipotodo_pais: ObjectId(workerData.idtipotodo_pais)});            
           const registro = await _Detalle_tipotodo_todo.save();
           console.log(aux + "--------------> [DETALLE AGREGADO]"+ registro);
+        }else{
+          console.log(aux + "--------------> [RARO]"+ existe_Detalle_tipotodo_todo);
         }
 
       }
     }
+    console.clear();
     console.log(aux +' - '+ nuevos +' - '+ detalles +' - '+  `-------->  ${workerData.nameWorker} = ${workerData.url}`);
+    if(aux !== detalles){
+        throw "Error maldito";
+    }
 
   } catch (error) {
 
