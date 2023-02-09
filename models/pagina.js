@@ -31,6 +31,12 @@ const Pagina = Schema({
         default: 'PENDING',
         emun: ['PENDING', 'INWORKER', 'FINALIZADO']
     }, 
+    estado_scrapeo_page: {
+        type: String,
+        required: true,
+        default: 'PENDING',
+        emun: ['PENDING', 'INWORKER', 'FINALIZADO']
+    }, 
     idrecurso: { 
         type: Schema.Types.ObjectId ,
         required: [true, 'Es Obligatorio'],

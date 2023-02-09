@@ -15,16 +15,17 @@ const mutex = require('async-mutex').Mutex;
 const cheerio = require('cheerio'); // Para trabajas con etiquetas html
 const { dbConnection } = require('./database/config'); // Base de Datoos Mongo
 const mongo = require('./models');
-const mongoose = require('mongoose');
 const { ObjectId } = require('mongoose').Types; // Para usar ObjectId y comprar
 require('dotenv').config(); // Variables de entorno
 
 const resourceMutex = new mutex();
 const resourceMutex2 = new mutex();
 const resourceMutex3 = new mutex();
+const resourceMutex4 = new mutex();
 
 const array_proxy = ['196.196.220.155', '196.196.247.237', '5.157.55.218', "165.231.95.148", "45.95.118.28", "165.231.95.17", "196.196.34.44", "185.158.104.152", "165.231.95.118", "50.3.198.225", "185.158.104.33", "185.158.106.179", "196.196.34.72", "185.158.106.153", "185.158.104.161", "5.157.55.128", "196.196.220.229", "196.196.34.180", "50.3.198.89", "50.3.198.30", "45.95.118.191", "196.196.34.84", "50.3.198.193",
-    '196.196.220.155', '196.196.247.237', '5.157.55.218', "165.231.95.148", "45.95.118.28", "165.231.95.17", "196.196.34.44", "185.158.104.152", "165.231.95.118", "50.3.198.225", "185.158.104.33", "185.158.106.179", "196.196.34.72", "185.158.106.153", "185.158.104.161", "5.157.55.128", "196.196.220.229", "196.196.34.180", "50.3.198.89", "50.3.198.30", "45.95.118.191", "196.196.34.84", "50.3.198.193"]; //185.104.217.4
+    '196.196.220.155', '196.196.247.237', '5.157.55.218', "165.231.95.148", "45.95.118.28", "165.231.95.17", "196.196.34.44", "185.158.104.152", "165.231.95.118", "50.3.198.225", "185.158.104.33", "185.158.106.179", "196.196.34.72", "185.158.106.153", "185.158.104.161", "5.157.55.128", "196.196.220.229", "196.196.34.180", "50.3.198.89", "50.3.198.30", "45.95.118.191", "196.196.34.84", "50.3.198.193"]; 
+
 var temp_array_proxy = [...array_proxy];
 var temp_array_pages = [];
 var array_todos_pais = [];
@@ -32,91 +33,9 @@ var array_todos_pais = [];
 var array_atractivos = [];
 var skip = 0;
 var limit = 1;
-var workers = 1;
+var workers = 5;
 var contador = 0;
 
-// // Create a function to access the resource
-// const accessResource = async () => {
-//     // Wait for the semaphore
-//     await concurrencySemaphore.acquire();
-//     // Wait for the mutex
-//     const release = await resourceMutex.acquire();
-//     try {
-//         trae_datos_array_y_borralos();
-//     } catch (error) {
-//         console.log("Error Mutex");
-//     } finally {
-//         release(); // Release the mutex
-//         concurrencySemaphore.release(); // Release the semaphore
-//     }
-// };
-
-// function initUpdate() {
-//     const worker = new Worker('./worker_update_atractivos.js', { workerData });
-//     worker.on('exit', (code) => {
-//         console.log("Fin worker")
-//     });
-// }
-
-
-// for (let index = 0; index < array_numeros.length; index++) {
-
-//     accessResource();
-//     // trae_datos_array_y_borralos();
-
-// }
-
-/*function initScrape(){
-    const worker = new Worker('./worker.js', { workerData });
-    worker.on('exit', (code) => {
-        console.log("Fin worker")
-        exec('taskkill /F /IM chrome.exe', (error, stdout, stderr) => {if (error)  return; });
-        setTimeout(() => {
-            initScrape()
-        }, 5000);
-    });
-}
-initScrape();*/
-
-
-
-
-// 1. Utilizar índices para optimizar las consultas. Los índices mejoran el tiempo de respuesta de las consultas en Mongoose al proporcionar una forma más rápida de acceder a los documentos.
-
-// 2. Usar consultas más específicas. Cuanto más específicas sean las consultas, menor será el tiempo de respuesta.
-
-// 3. Utilizar proyecciones para limitar el número de campos devueltos. Esto puede ayudar a reducir el tiempo de respuesta al evitar que Mongoose tenga que recuperar y devolver todos los campos de los documentos.
-
-// 4. Utilizar consultas de límite para limitar el número de documentos que se recuperan. Esto reduce el tiempo necesario para recuperar los documentos.
-
-// 5. Utilizar consultas de agregación para procesar datos en lugar de realizar acciones en cada documento individualmente. Esto mejorará el tiempo de respuesta al reducir la cantidad de trabajo que debe realizar Mongoose para devolver los resultados.
-
-// También es importante tener en cuenta el tamaño de los índices. Si se crean índices demasiado grandes, esto puede reducir la velocidad de escritura y también aumentar el consumo de memoria. Por lo tanto, es importante encontrar el equilibrio adecuado entre la velocidad de lectura y la velocidad de escritura.
-
-// Además, también es importante actualizar los índices cada vez que se realicen cambios en la base de datos. Esto garantizará que los índices se mantengan actualizados para reflejar los cambios en la base de datos. Esto también mejorará la velocidad de lectura.
-
-// En resumen, para asegurarse de que Mongoose funcione correctamente con una colección que contenga millones de documentos, es importante crear índices adecuados para las consultas frecuentes, mantenerlos actualizados y encontrar el equilibrio adecuado entre la velocidad de lectura y escritura.
-
-//Crear Indice
-// const index = await Modelo.createIndex({ campo1: 1, campo2: 1 });
-
-// //Actualizar Indice
-// const index = await Model.updateIndex({ campo1: 1, campo2: 1 });
-
-// //Eliminar Indice
-// const index = await Model.dropIndex('nombre_del_indice');
-
-// //Crear Indice Compuesto
-// const index = await Model.createIndex({ campo1: 1, campo2: 1, campo3: -1 });
-
-// //Crear Indice Único
-// const index = await Model.createIndex({ campo1: 1 }, { unique: true });
-
-// //Crear Indice de Texto
-// const index = await Model.createIndex({ campo1: 'text' });
-
-// //Crear Indice Espacial
-// const index = await Model.createIndex({ campo1: '2dsphere' });
 
 const accessResourceTodoPais = async () => {
     // Wait for the mutex
@@ -150,6 +69,17 @@ const accessResourcePage = async () => {
         return await onePageToScrape();
     } catch (error) {
         console.log("Error Mutex accessResourcePage " + error);
+    } finally {
+        release(); // Release the mutex
+    }
+};
+
+const accessResourcePageIndividual = async () => {
+    const release = await resourceMutex4.acquire();
+    try {
+        return await onePageIndividual();
+    } catch (error) {
+        console.log("Error Mutex accessResourcePageIndividual " + error);
     } finally {
         release(); // Release the mutex
     }
@@ -197,6 +127,26 @@ async function onePageToScrape() {
 
 }
 
+async function onePageIndividual() {
+    if (temp_array_pages.length === 0) return null;
+    setTimeout(() => true, Math.floor((Math.random() * 1000)));
+    let position = Math.floor(Math.random() * (temp_array_pages.length - 1));
+    let page = temp_array_pages[position];
+    temp_array_pages.splice(position, 1);
+
+    try {
+        const afectado = await mongo.Pagina.updateOne({ _id: page._id }, { $set: { estado_scrapeo: 'INWORKER' } });
+        if (afectado.modifiedCount !== 1 && page.estado_scrapeo !== 'INWORKER'){ 
+            console.log(" --- ERROR AL CAMBIAR ESTADO A LA PAGINA A SCRAPEAR"); 
+            return null; 
+        }
+        return page;
+    } catch (error) {
+        console.log(" --- ERROR AL CAMBIAR ESTADO A LA PAGINA A SCRAPEAR");
+        return null;
+    }
+}
+
 async function array_paginas_pendientes_scrapeo(array_todos_pendientes) {
     try {
         //const xxx = await mongo.Detalle_tipotodo_pais.find({ _id: ObjectId('63e2cdc3b457b07198911c01'), estado_scrapeo: 'INWORKER' });
@@ -221,6 +171,7 @@ async function array_paginas_pendientes_scrapeo(array_todos_pendientes) {
             ultima_pagina['idrecurso'] = todo._id;
             ultima_pagina['idpais'] = todo.pais;
             ultima_pagina['idtipotodo'] = todo.tipotodo;
+            ultima_pagina['idtipotodo_pais'] = todo._id;            
             array_paginas.push(ultima_pagina);
         }
 
@@ -262,6 +213,7 @@ async function workerScrapePage(nameWorker) {
                 'idpais': page.idpais.toString(),
                 'idtipotodo': page.idtipotodo.toString(),
                 'idpage': page._id.toString(),
+                'idtipotodo_pais': page.idtipotodo_pais.toString(),
                 'nameWorker': nameWorker
             }
         });
@@ -292,6 +244,37 @@ async function workerScrapeNroTodos(nameWorker) {
         myWorker.terminate();
         setTimeout(() => workerScrapeNroTodos(nameWorker), Math.floor((Math.random() * 1000)));
     });
+}
+
+
+async function workerScrapeAtraccionesPage(nameWorker) {
+    let proxy = await accessResourceProxy();
+    let page = await accessResourcePageIndividual();
+    if (page === null) { return; }
+
+    const obj_tipotodo_pais = await mongo.Detalle_tipotodo_pais.findOne({_id: page.idrecurso});
+    if (obj_tipotodo_pais === null) { return; }
+
+    const myWorker = new Worker('./workers/worker_scrape_atracciones_by_page.js',
+        {
+            workerData: {
+                'ip_proxy': proxy,
+                'url': page.url_actual,
+                'idpage': page._id.toString(),
+                'idpais': obj_tipotodo_pais.pais.toString(),
+                'idtipotodo': obj_tipotodo_pais.tipotodo.toString(),
+                'idtipotodo_pais': obj_tipotodo_pais._id.toString(),
+                'nameWorker': nameWorker
+            }
+        });
+    //console.log("---> (NEW WORKER) ");
+    myWorker.on('exit', async (code) => {
+        //console.log("---> (EXIT WORKER) = " + page.url_actual);
+        myWorker.terminate();
+        setTimeout(() => workerScrapeAtraccionesPage(nameWorker), Math.floor((Math.random() * 1000)));
+    });
+
+
 }
 
 // (async () => {
@@ -376,6 +359,28 @@ async function workerScrapeNroTodos(nameWorker) {
 // const consulta = await mongo.Detalle_tipotodo_todo.find({idtipotodo_pais:ObjectId('63e2cd7c7c8e10c9e094d5f6')})
 // .populate('id_todo'); 
 // console.log(consulta)
+
+
+
+
+
+const array_idrecursos = ["63e2cc5bd907c58050596c62","63e2cc5bd907c58050596c66","63e2ccf921469f0797359959","63e2ccfa21469f079735995d","63e2ccfd21469f0797359975","63e2cd151c94f0581e0f12d6","63e2cd161c94f0581e0f12da","63e2cd161c94f0581e0f12de","63e2cd171c94f0581e0f12e2","63e2cd7b7c8e10c9e094d5ee","63e2cd7b7c8e10c9e094d5f2","63e2cd7c7c8e10c9e094d5f6","63e2cd7f7c8e10c9e094d612","63e2cd925a859147e4aebdba","63e2cdacc174005ef434b765","63e2cdadc174005ef434b76d","63e2cdadc174005ef434b771","63e2cdb0c174005ef434b789","63e2cdc3b457b07198911c01","63e2cdc4b457b07198911c05","63e2cdc4b457b07198911c09","63e2cdc5b457b07198911c11","63e2cdc7b457b07198911c19","63e2cdc7b457b07198911c1d","63e2cde4c0a97a66d4960181","63e2cdfb4384b6529dbe4547","63e2cdfc4384b6529dbe454b","63e2cdfc4384b6529dbe454f","63e2cdfd4384b6529dbe4553","63e2cdfe4384b6529dbe455f","63e2cdff4384b6529dbe4563","63e2ce47d4cf45a7fad14346","63e2ce48d4cf45a7fad1434a","63e2ce48d4cf45a7fad1434e","63e2ce4cd4cf45a7fad1436a"];
+
+    
+    let idrecurso = array_idrecursos[0];
+   const paginas_pendientes = await mongo.Pagina.updateMany({idrecurso:ObjectId(idrecurso)},{$set:{estado_scrapeo_page:'PENDING'}});
+   await mongo.Detalle_tipotodo_todo.deleteMany({idtipotodo_pais:ObjectId(idrecurso)});
+    
+    let paginas_raspar = await mongo.Pagina.find({ idrecurso: ObjectId(idrecurso), estado_scrapeo_page: 'PENDING' });
+    if(paginas_raspar.length!==0){
+        console.log(paginas_raspar.length);
+        temp_array_pages = [...paginas_raspar];
+        for (let index = 0; index < workers; index++) {
+            workerScrapeAtraccionesPage(`( WKR - ${index + 1} )`);
+        }
+    }else{
+        console.log("SIN PAGINAS PARA RASPAR");
+    }
 
 })();
 

@@ -38,18 +38,18 @@ async function mainWorker() {
     const elemento = await page.$(".jemSU[data-automation='WebPresentation_WebSortDisclaimer']")
     const info = await elemento.$(".biGQs");
     let title_ =  await (await info.getProperty('textContent')).jsonValue();
-    title_ = title_.replace(",","");
+    title_ = title_.replaceAll(",","");
     let firstNumber = 0;
     if(title_.includes("Más de")){
       const elemento_paginacion = await page.$(".jemSU[data-automation='WebPresentation_PaginationLinksList']")
       const infoPaginas = await elemento_paginacion.$(".uYzlj > .biGQs");
       title_ =  await (await infoPaginas.getProperty('textContent')).jsonValue();
-      title_ = title_.replace(",","");
-      const separa  = title_.split("1 a 30 de");
-      firstNumber = separa[1];
+      title_ = title_.replaceAll(",","");
+      const separa  = title_.split("de");
+      firstNumber = Number(separa[2]);
     }else{
-      firstNumber = title_.match(/\d+/)[0];
-    }
+      firstNumber = Number(title_.match(/\d+/)[0]);
+    }   
    
      
      console.log(firstNumber+` -------->  ${workerData.nameWorker} -  ${url}`);     

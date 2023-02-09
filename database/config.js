@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const dbConnection = async() => {
     try {
         mongoose.set('strictQuery', false);
-        await mongoose.connect( 'mongodb://osaptm:123@34.123.8.201:27017/tripadvisor_paises?authMechanism=DEFAULT&authSource=admin', {
+        await mongoose.connect( 'mongodb://osaptm:123@35.222.221.233:27017/tripadvisor_paises?authMechanism=DEFAULT&authSource=admin', {
             useNewUrlParser: true,
             useUnifiedTopology: true,
         });

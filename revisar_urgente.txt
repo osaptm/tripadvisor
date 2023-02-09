@@ -1,0 +1,83 @@
+
+// // Create a function to access the resource
+// const accessResource = async () => {
+//     // Wait for the semaphore
+//     await concurrencySemaphore.acquire();
+//     // Wait for the mutex
+//     const release = await resourceMutex.acquire();
+//     try {
+//         trae_datos_array_y_borralos();
+//     } catch (error) {
+//         console.log("Error Mutex");
+//     } finally {
+//         release(); // Release the mutex
+//         concurrencySemaphore.release(); // Release the semaphore
+//     }
+// };
+
+// function initUpdate() {
+//     const worker = new Worker('./worker_update_atractivos.js', { workerData });
+//     worker.on('exit', (code) => {
+//         console.log("Fin worker")
+//     });
+// }
+
+
+// for (let index = 0; index < array_numeros.length; index++) {
+
+//     accessResource();
+//     // trae_datos_array_y_borralos();
+
+// }
+
+/*function initScrape(){
+    const worker = new Worker('./worker.js', { workerData });
+    worker.on('exit', (code) => {
+        console.log("Fin worker")
+        exec('taskkill /F /IM chrome.exe', (error, stdout, stderr) => {if (error)  return; });
+        setTimeout(() => {
+            initScrape()
+        }, 5000);
+    });
+}
+initScrape();*/
+
+
+
+
+// 1. Utilizar índices para optimizar las consultas. Los índices mejoran el tiempo de respuesta de las consultas en Mongoose al proporcionar una forma más rápida de acceder a los documentos.
+
+// 2. Usar consultas más específicas. Cuanto más específicas sean las consultas, menor será el tiempo de respuesta.
+
+// 3. Utilizar proyecciones para limitar el número de campos devueltos. Esto puede ayudar a reducir el tiempo de respuesta al evitar que Mongoose tenga que recuperar y devolver todos los campos de los documentos.
+
+// 4. Utilizar consultas de límite para limitar el número de documentos que se recuperan. Esto reduce el tiempo necesario para recuperar los documentos.
+
+// 5. Utilizar consultas de agregación para procesar datos en lugar de realizar acciones en cada documento individualmente. Esto mejorará el tiempo de respuesta al reducir la cantidad de trabajo que debe realizar Mongoose para devolver los resultados.
+
+// También es importante tener en cuenta el tamaño de los índices. Si se crean índices demasiado grandes, esto puede reducir la velocidad de escritura y también aumentar el consumo de memoria. Por lo tanto, es importante encontrar el equilibrio adecuado entre la velocidad de lectura y la velocidad de escritura.
+
+// Además, también es importante actualizar los índices cada vez que se realicen cambios en la base de datos. Esto garantizará que los índices se mantengan actualizados para reflejar los cambios en la base de datos. Esto también mejorará la velocidad de lectura.
+
+// En resumen, para asegurarse de que Mongoose funcione correctamente con una colección que contenga millones de documentos, es importante crear índices adecuados para las consultas frecuentes, mantenerlos actualizados y encontrar el equilibrio adecuado entre la velocidad de lectura y escritura.
+
+//Crear Indice
+// const index = await Modelo.createIndex({ campo1: 1, campo2: 1 });
+
+// //Actualizar Indice
+// const index = await Model.updateIndex({ campo1: 1, campo2: 1 });
+
+// //Eliminar Indice
+// const index = await Model.dropIndex('nombre_del_indice');
+
+// //Crear Indice Compuesto
+// const index = await Model.createIndex({ campo1: 1, campo2: 1, campo3: -1 });
+
+// //Crear Indice Único
+// const index = await Model.createIndex({ campo1: 1 }, { unique: true });
+
+// //Crear Indice de Texto
+// const index = await Model.createIndex({ campo1: 'text' });
+
+// //Crear Indice Espacial
+// const index = await Model.createIndex({ campo1: '2dsphere' });

@@ -172,45 +172,34 @@ async function extraeAtractivos(page) { //idPagina
       }      
 
       if (obj_todo === null) {
-
-          const session = await dbSession();
-          session.startTransaction();
-          
-          try {
-              const data = {
-                nombre: nombre_final_sin_numeracion(h3Atractivo),
-                url: hrefAtractivo,
-                pais: ObjectId(workerData.idpais),
-              }
-
-              mongo.Todo.create([data], { session: session }).then(async function(document) {            
-                
-                await mongo.Detalle_tipotodo_todo.create([{ id_tipotodo: ObjectId(workerData.idtipotodo) , id_todo:document[0]._id }], { session: session });  
-                await session.commitTransaction(); 
-
-              }).catch(async function(err) {
-                console.log(err)
-                await session.abortTransaction();
-              });  
-
-          } catch (err) {
-
-            await session.abortTransaction();
-            throw "Error guardar TODO y su detalle: " +err;
-
-          } finally {
-
-            session.endSession();
-
+        console.log("** NO EXISTE "+hrefAtractivo);
+        try {
+          const data = {
+            nombre: nombre_final_sin_numeracion(h3Atractivo),
+            url: hrefAtractivo,
+            pais: ObjectId(workerData.idpais),
           }
-        
 
-      }else{
+          const document = await mongo.Todo.create([data]); 
+          const registro = await mongo.Detalle_tipotodo_todo.create([{ id_tipotodo: ObjectId(workerData.idtipotodo), id_todo: document[0]._id, idtipotodo_pais: ObjectId(workerData.idtipotodo_pais)}]); 
+         
+          console.log("** "+registro);
 
-        let existe_Detalle_tipotodo_todo = await mongo.Detalle_tipotodo_todo.findOne({ id_tipotodo: ObjectId(workerData.idtipotodo), id_todo:obj_todo._id });
+        } catch (err) {
+
+          throw "Error guardar TODO y su detalle: " + err;
+
+        } 
+
+      } else {
+
+        let existe_Detalle_tipotodo_todo = await mongo.Detalle_tipotodo_todo.findOne({ id_tipotodo: ObjectId(workerData.idtipotodo), id_todo: obj_todo._id,  idtipotodo_pais: ObjectId(workerData.idtipotodo_pais)});              
+
         if (existe_Detalle_tipotodo_todo === null) {
-          const _Detalle_tipotodo_todo = new mongo.Detalle_tipotodo_todo({ id_tipotodo: ObjectId(workerData.idtipotodo), id_todo:obj_todo._id });
-          await _Detalle_tipotodo_todo.save();
+         
+          const _Detalle_tipotodo_todo = new mongo.Detalle_tipotodo_todo({ id_tipotodo: ObjectId(workerData.idtipotodo), id_todo: obj_todo._id, idtipotodo_pais: ObjectId(workerData.idtipotodo_pais)});
+          const registro = await _Detalle_tipotodo_todo.save();
+          console.log(aux + "--------------> [DETALLE AGREGADO]"+ registro);
         }
 
       }
