@@ -381,7 +381,7 @@ const array_idrecursos = ["63e2cc5bd907c58050596c62","63e2cc5bd907c58050596c66",
         }
     }else{
         console.log("SIN PAGINAS PARA RASPAR");
-    }
+    } //git clone https://github.com/osaptm/tripadvisor
 
 })();
 

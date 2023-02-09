@@ -8,6 +8,7 @@
     const Pais = require('./pais')
     const Tipotodo = require('./tipotodo')
     const Todo = require('./todo')
+    const Todo_prueba = require('./todo_prueba')
 
 module.exports = {
     Detalle_categoria_atraccion_todo,
@@ -20,4 +21,5 @@ module.exports = {
     Pais,
     Tipotodo ,
     Todo,
+    Todo_prueba,
 }
