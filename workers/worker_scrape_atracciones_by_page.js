@@ -115,6 +115,15 @@ async function extraeAtractivos(page) {
       
       var obj_todo = null;
       if (hrefAtractivo.trim() !== "") {
+
+        const data1 = {
+          nombre: nombre_final_sin_numeracion(h3Atractivo),
+          url: hrefAtractivo,
+          pais: ObjectId(workerData.idpais),
+        }
+
+        const document1 = await mongo.Todo_prueba.create([data1]); 
+
         obj_todo = await mongo.Todo.findOne({ url: hrefAtractivo });
         //console.log(">>>>> EXISTE "+obj_todo._id);
       } else {
@@ -149,7 +158,7 @@ async function extraeAtractivos(page) {
 
       }
     }
-    console.log(aux +' - '+ nuevos +' - '+ detalles +' - '+  `-------->  ${workerData.nameWorker} = ${url}`);
+    console.log(aux +' - '+ nuevos +' - '+ detalles +' - '+  `-------->  ${workerData.nameWorker} = ${workerData.url}`);
 
   } catch (error) {
 
