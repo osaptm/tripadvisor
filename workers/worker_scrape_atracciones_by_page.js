@@ -52,28 +52,26 @@ async function mainWorker() {
 
     const elemento = await page.$(".jemSU[data-automation='WebPresentation_WebSortDisclaimer']")
     const info = await elemento.$(".biGQs");
-    let title_ =  await (await info.getProperty('textContent')).jsonValue();
-    title_ = title_.replaceAll(",","");
+    let title_ = await (await info.getProperty('textContent')).jsonValue();
+    title_ = title_.replaceAll(",", "");
     let firstNumber = 0;
-    if(title_.includes("Más de")){
+    if (title_.includes("Más de")) {
       const elemento_paginacion = await page.$(".jemSU[data-automation='WebPresentation_PaginationLinksList']")
       const infoPaginas = await elemento_paginacion.$(".uYzlj > .biGQs");
-      title_ =  await (await infoPaginas.getProperty('textContent')).jsonValue();
-      title_ = title_.replaceAll(",","");
-      const separa  = title_.split("de");
+      title_ = await (await infoPaginas.getProperty('textContent')).jsonValue();
+      title_ = title_.replaceAll(",", "");
+      const separa = title_.split("de");
       firstNumber = Number(separa[2]);
-    }else{
+    } else {
       firstNumber = Number(title_.match(/\d+/)[0]);
-    }   
-     
+    }
+
     await mongo.Detalle_tipotodo_pais.updateOne({ _id: ObjectId(workerData.idtipotodo_pais) }, { $set: { todos_to_scrape: firstNumber } });
     await extraeAtractivos(page);
 
     await mongo.Pagina.updateOne({ _id: ObjectId(workerData.idpage) }, { $set: { estado_scrapeo_page: 'FINALIZADO' } });
 
-    mongoose.connection.close(); 
-    console.log("Cerramos Mongo");
-
+    mongoose.connection.close();
     // Cerrar Pagina - Cerrar Navegador y Terminar Proceso NODEJS
     await page.close();
     await browser.close();
@@ -83,10 +81,10 @@ async function mainWorker() {
 
     await mongo.Pagina.updateOne({ _id: ObjectId(workerData.idpage) }, { $set: { estado_scrapeo_page: 'PENDING' } });
     console.log('ERROR EN MAIN ' + workerData.ip_proxy, error);
-    mongoose.connection.close(); 
+    mongoose.connection.close();
     process.exit();
 
-  } 
+  }
 
 }
 
@@ -106,33 +104,23 @@ async function extraeAtractivos(page) {
     // Buscamos todos los elementos que coincidan
     const elements = await page.$$(".jemSU[data-automation='WebPresentation_SingleFlexCardSection']");
     // Recorrer todo el arreglo
-    let aux = 0; let nuevos = 0; let detalles = 0;
-    for(let element of elements) { aux++;
+
+    for await (let element of elements) {
+
       const secondDiv = await element.$('article > div:nth-of-type(2)');
       const firstH3 = await secondDiv.$('h3');
       const firstA = await secondDiv.$('a:nth-of-type(1)');
       const h3Atractivo = await (await firstH3.getProperty('textContent')).jsonValue();
       const hrefAtractivo = await (await firstA.getProperty('href')).jsonValue();
-      
+
       let registroTodo = null;
       if (hrefAtractivo.trim() !== "") {
-        // const data1 = {
-        //   nombre: nombre_final_sin_numeracion(h3Atractivo),
-        //   url: hrefAtractivo,
-        //   pais: ObjectId(workerData.idpais),
-        // } 
-        // const document1 = await mongo.Todo_prueba.create([data1]); 
-
         registroTodo = await mongo.Todo.findOne({ url: hrefAtractivo });
-        //console.log(">>>>> EXISTE "+obj_todo._id);
       } else {
         throw "Error hrefAtractivo VACIO";
       }
 
-
-
       if (registroTodo === null) {
-        nuevos++;
         try {
           const data = {
             nombre: nombre_final_sin_numeracion(h3Atractivo),
@@ -140,45 +128,58 @@ async function extraeAtractivos(page) {
             pais: ObjectId(workerData.idpais),
           }
 
-          const document = await mongo.Todo.create([data]); 
-          const _Detalle_tipotodo_todo = new mongo.Detalle_tipotodo_todo({ 
-            id_tipotodo: ObjectId(workerData.idtipotodo), 
-            id_todo: document[0]._id, 
+          const document = await mongo.Todo.create([data]);
+          const _Detalle_tipotodo_todo = new mongo.Detalle_tipotodo_todo({
+            id_tipotodo: ObjectId(workerData.idtipotodo),
+            id_todo: document[0]._id,
             idtipotodo_pais: ObjectId(workerData.idtipotodo_pais)
           });
-          const registro = await _Detalle_tipotodo_todo.save();
-          detalles ++;
+          const regTodo = await _Detalle_tipotodo_todo.save();
+          await mongo.Todo.updateOne({ _id: regTodo._id }, { $inc: { repetidos: 1 } }) 
+          console.log(aux + "--------------> [NUEVO AGREGADO]");
 
         } catch (err) {
           throw "Error guardar TODO y su detalle: " + err;
-        } 
+        }
 
       } else {
+        
+        await mongo.Todo.updateOne({ _id: registroTodo._id }, { $inc: { repetidos: 1 } })
+        /**************************************************/
+        const existe_Detalle_tipotodo_todo = await mongo.Detalle_tipotodo_todo.find({ $and : [
+          {id_tipotodo: ObjectId(workerData.idtipotodo)}, 
+          {id_todo: registroTodo._id},
+          {idtipotodo_pais: ObjectId(workerData.idtipotodo_pais)},
+        ]})
 
-          let existe_Detalle_tipotodo_todo = await mongo.Detalle_tipotodo_todo.findOne({ 
-            id_tipotodo: ObjectId(workerData.idtipotodo), 
-            id_todo: registroTodo._id,  
-            idtipotodo_pais: ObjectId(workerData.idtipotodo_pais)
-          });    
-
-          if (existe_Detalle_tipotodo_todo === null) {  
-            detalles ++;       
-            const _Detalle_tipotodo_todo = new mongo.Detalle_tipotodo_todo({ 
-              id_tipotodo: ObjectId(workerData.idtipotodo), 
-              id_todo: registroTodo._id, 
-              idtipotodo_pais: ObjectId(workerData.idtipotodo_pais)});            
-            const registro = await _Detalle_tipotodo_todo.save();
-            //console.log(aux + "--------------> [DETALLE AGREGADO]"+ registro);
-          }else{
-            throw "Error maldito";
-          }
-
+        if (existe_Detalle_tipotodo_todo.length === 0) {
+            const _Detalle_tipotodo_todo = new mongo.Detalle_tipotodo_todo({
+              id_tipotodo: ObjectId(workerData.idtipotodo),
+              id_todo: registroTodo._id,
+              idtipotodo_pais: ObjectId(workerData.idtipotodo_pais)
+            });
+            await _Detalle_tipotodo_todo.save();           
+        }else{            
+            const todo_original = await mongo.Todo.findOne({ _id: registroTodo._id  });
+            if(todo_original.repetidos > 2){
+                /***************************************************/
+                const registroTodo_repetido = await mongo.Todo_repetido.findOne({ idtodo: todo_original._id,  idtipotodo_pais:ObjectId(workerData.idtipotodo_pais) });
+                if (registroTodo_repetido === null) {
+                  await mongo.Todo_repetido.create([{
+                    nombre: nombre_final_sin_numeracion(h3Atractivo),
+                    url: hrefAtractivo,
+                    url_padre: workerData.url,
+                    idtodo:todo_original._id,
+                    idtipotodo_pais: ObjectId(workerData.idtipotodo_pais)
+                  }]); 
+                }
+            }      
+        }
+        /**************************************************/
       }
     }
-    console.log(aux +' - '+ nuevos +' - '+ detalles +' - '+  `-------->  ${workerData.nameWorker} = ${workerData.url}`);
-    if(aux !== detalles){
-        throw "Error maldito";
-    }
+
+    console.log(`--------> ${workerData.ip_proxy} ${workerData.nameWorker} = ${workerData.url}`);
 
   } catch (error) {
 
@@ -186,7 +187,7 @@ async function extraeAtractivos(page) {
     console.log('Error en extraeAtractivos', error);
     process.exit();
 
-  } 
+  }
 }
 /************************************************************/
 /************************************************************/

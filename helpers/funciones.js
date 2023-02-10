@@ -1,4 +1,6 @@
 const axios = require('axios');
+const mutex = require('async-mutex').Mutex;
+
 async function checkURL(url) {
     await axios.get(url).then((response) => {
       return true;
@@ -7,20 +9,38 @@ async function checkURL(url) {
     });
   }
 
-  
-    // Usar los proxys para evitar baneos en scrapear
-    // await useProxy(page, newProxyUrl); --> Para usar proxy por pagina
-    // await page.setRequestInterception(true);
-    // page.on('request', async request => {
-    //   await useProxy(request, newProxyUrl);
-    // });
+const accessResourceProxy = async (resourceMutex, MyProxy) => {
+    // Wait for the mutex
+    const release = await resourceMutex.acquire();
+    try {
+        return MyProxy.oneProxy();
+    } catch (error) {
+        console.log("Error Mutex Proxy " + error);
+    } finally {
+        release(); 
+    }
+};
 
+ class MyProxyClass {
+    constructor(){
+      this.array_proxy = ['196.196.220.155', '196.196.247.237', '5.157.55.218', "165.231.95.148", "45.95.118.28", "165.231.95.17", "196.196.34.44", "185.158.104.152", "165.231.95.118", "50.3.198.225", "185.158.104.33", "185.158.106.179", "196.196.34.72", "185.158.106.153", "185.158.104.161", "5.157.55.128", "196.196.220.229", "196.196.34.180", "50.3.198.89", "50.3.198.30", "45.95.118.191", "196.196.34.84", "50.3.198.193",'196.196.220.155', '196.196.247.237', '5.157.55.218', "165.231.95.148", "45.95.118.28", "165.231.95.17", "196.196.34.44", "185.158.104.152", "165.231.95.118", "50.3.198.225", "185.158.104.33", "185.158.106.179", "196.196.34.72", "185.158.106.153", "185.158.104.161", "5.157.55.128", "196.196.220.229", "196.196.34.180", "50.3.198.89", "50.3.198.30", "45.95.118.191", "196.196.34.84", "50.3.198.193"];
+      this.temp_array_proxy = [...this.array_proxy];
+    }
+    elimina_proxy(position){
+      this.temp_array_proxy.splice(position, 1);
+    };
+    oneProxy() {
+      if (this.temp_array_proxy.length === 0) { this.temp_array_proxy = [...this.array_proxy]; }
+      let position = Math.floor(Math.random() * (this.temp_array_proxy.length - 1));
+      let proxy = this.temp_array_proxy[position];
+      this.elimina_proxy(position);
+      return proxy;
+   }
 
-    // Esperar 5 segundos para revidar la pagina
-    // await new Promise((resolve, reject) => {
-    //   try {
-    //     setTimeout(() => resolve(), 5000);
-    //   } catch (error) {
-    //     console.log('Error en tiempo de espera');
-    //   }
-    // })
+ }
+
+module.exports = {
+  checkURL,
+  MyProxyClass,
+  accessResourceProxy
+}

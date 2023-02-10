@@ -156,23 +156,21 @@ async function extraeAtractivos(page) { //idPagina
     const elements = await page.$$(".jemSU[data-automation='WebPresentation_SingleFlexCardSection']");
     // Recorrer todo el arreglo
     for await (let element of elements) {
-      //const article = await element.$('article');
-      //const html_article = await (await article.getProperty('innerHTML')).jsonValue();
+
       const secondDiv = await element.$('article > div:nth-of-type(2)');
       const firstH3 = await secondDiv.$('h3');
       const firstA = await secondDiv.$('a:nth-of-type(1)');
       const h3Atractivo = await (await firstH3.getProperty('textContent')).jsonValue();
       const hrefAtractivo = await (await firstA.getProperty('href')).jsonValue();
 
-      let obj_todo = null;
-      if(hrefAtractivo.trim()!==""){
-         obj_todo = await mongo.Todo.findOne({ url: hrefAtractivo});
-      }else{
-        throw "Error extraeAtractivos hrefAtractivo VACIO";
-      }      
+      let registroTodo = null;
+      if (hrefAtractivo.trim() !== "") {
+        registroTodo = await mongo.Todo.findOne({ url: hrefAtractivo });
+      } else {
+        throw "Error hrefAtractivo VACIO";
+      }
 
-      if (obj_todo === null) {
-        console.log("** NO EXISTE "+hrefAtractivo);
+      if (registroTodo === null) {
         try {
           const data = {
             nombre: nombre_final_sin_numeracion(h3Atractivo),
@@ -180,31 +178,58 @@ async function extraeAtractivos(page) { //idPagina
             pais: ObjectId(workerData.idpais),
           }
 
-          const document = await mongo.Todo.create([data]); 
-          const registro = await mongo.Detalle_tipotodo_todo.create([{ id_tipotodo: ObjectId(workerData.idtipotodo), id_todo: document[0]._id, idtipotodo_pais: ObjectId(workerData.idtipotodo_pais)}]); 
-         
-          console.log("** "+registro);
+          const document = await mongo.Todo.create([data]);
+          const _Detalle_tipotodo_todo = new mongo.Detalle_tipotodo_todo({
+            id_tipotodo: ObjectId(workerData.idtipotodo),
+            id_todo: document[0]._id,
+            idtipotodo_pais: ObjectId(workerData.idtipotodo_pais)
+          });
+          const regTodo = await _Detalle_tipotodo_todo.save();
+          await mongo.Todo.updateOne({ _id: regTodo._id }, { $inc: { repetidos: 1 } }) 
+          console.log(aux + "--------------> [NUEVO AGREGADO]");
 
         } catch (err) {
-
           throw "Error guardar TODO y su detalle: " + err;
-
-        } 
-
-      } else {
-
-        let existe_Detalle_tipotodo_todo = await mongo.Detalle_tipotodo_todo.findOne({ id_tipotodo: ObjectId(workerData.idtipotodo), id_todo: obj_todo._id,  idtipotodo_pais: ObjectId(workerData.idtipotodo_pais)});              
-
-        if (existe_Detalle_tipotodo_todo === null) {
-         
-          const _Detalle_tipotodo_todo = new mongo.Detalle_tipotodo_todo({ id_tipotodo: ObjectId(workerData.idtipotodo), id_todo: obj_todo._id, idtipotodo_pais: ObjectId(workerData.idtipotodo_pais)});
-          const registro = await _Detalle_tipotodo_todo.save();
-          console.log(aux + "--------------> [DETALLE AGREGADO]"+ registro);
         }
 
+      } else {
+        
+        await mongo.Todo.updateOne({ _id: registroTodo._id }, { $inc: { repetidos: 1 } })
+        /**************************************************/
+        const existe_Detalle_tipotodo_todo = await mongo.Detalle_tipotodo_todo.find({ $and : [
+          {id_tipotodo: ObjectId(workerData.idtipotodo)}, 
+          {id_todo: registroTodo._id},
+          {idtipotodo_pais: ObjectId(workerData.idtipotodo_pais)},
+        ]})
+
+        if (existe_Detalle_tipotodo_todo.length === 0) {
+            const _Detalle_tipotodo_todo = new mongo.Detalle_tipotodo_todo({
+              id_tipotodo: ObjectId(workerData.idtipotodo),
+              id_todo: registroTodo._id,
+              idtipotodo_pais: ObjectId(workerData.idtipotodo_pais)
+            });
+            await _Detalle_tipotodo_todo.save();           
+        }else{            
+            const todo_original = await mongo.Todo.findOne({ _id: registroTodo._id  });
+            if(todo_original.repetidos > 2){
+                /***************************************************/
+                const registroTodo_repetido = await mongo.Todo_repetido.findOne({ idtodo: todo_original._id,  idtipotodo_pais:ObjectId(workerData.idtipotodo_pais) });
+                if (registroTodo_repetido === null) {
+                  await mongo.Todo_repetido.create([{
+                    nombre: nombre_final_sin_numeracion(h3Atractivo),
+                    url: hrefAtractivo,
+                    url_padre: workerData.url,
+                    idtodo:todo_original._id,
+                    idtipotodo_pais: ObjectId(workerData.idtipotodo_pais)
+                  }]); 
+                }
+            }      
+        }
+        /**************************************************/
       }
     }
- 
+
+    console.log(`-------->  ${workerData.nameWorker} = ${workerData.url}`);
     
   } catch (error) {
 

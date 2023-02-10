@@ -15,7 +15,11 @@ const Todo = Schema({
         default: 'PENDING',
         emun: ['PENDING', 'FINALIZADO']
     }, 
-    pais: { type: Schema.Types.ObjectId, required: true, ref:'Pais'},
+    repetidos: {
+        type: Number,
+        required: true,
+        default: 0
+    }, 
     obj_tipotodo: { type: Object, required: true,  default: {}},
     obj_categorias_atraccion: { type: Object, required: true,  default: {}},
 });
