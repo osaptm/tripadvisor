@@ -136,7 +136,6 @@ async function extraeAtractivos(page) {
           });
           const regTodo = await _Detalle_tipotodo_todo.save();
           await mongo.Todo.updateOne({ _id: regTodo._id }, { $inc: { repetidos: 1 } }) 
-          console.log(aux + "--------------> [NUEVO AGREGADO]");
 
         } catch (err) {
           throw "Error guardar TODO y su detalle: " + err;

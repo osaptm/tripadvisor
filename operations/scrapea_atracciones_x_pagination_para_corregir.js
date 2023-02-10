@@ -5,9 +5,8 @@ const mongo = require('../models');
 const { MyProxyClass, accessResourceProxy } = require('../helpers/funciones');
 const { ObjectId } = require('mongoose').Types; // Para usar ObjectId y comprar
 require('dotenv').config(); // Variables de entorno
-
 const MyProxy = new MyProxyClass();
-const mutexProxy = new mutex();
+
 const resourceMutex = new mutex();
 var temp_array_pages = [];
 var workers = 1;
@@ -41,7 +40,7 @@ async function onePageIndividual() {
 }
 
 async function workerScrapeAtraccionesPage(nameWorker) {
-    let proxy = await accessResourceProxy(mutexProxy, MyProxy);
+    let proxy = await MyProxy.accessResourceProxy();
     let page = await accessResourcePageIndividual();
     if (page === null) { return; }
 

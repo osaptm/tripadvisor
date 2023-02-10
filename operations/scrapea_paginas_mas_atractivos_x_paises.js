@@ -1,13 +1,12 @@
 const { exec } = require('child_process');
 const { Worker, workerData } = require('worker_threads');
 const mutex = require('async-mutex').Mutex;
-const { MyProxyClass, accessResourceProxy } = require('../helpers/funciones');
+const { MyProxyClass } = require('../helpers/funciones');
 const { dbConnection } = require('../database/config'); // Base de Datoos Mongo
 const mongo = require('../models');
 const { ObjectId } = require('mongoose').Types; // Para usar ObjectId y comprar
 require('dotenv').config(); // Variables de entorno
 
-const mutexProxy = new mutex();
 const MyProxy = new MyProxyClass();
 const resourceMutex = new mutex();
 var temp_array_pages = [];
@@ -103,7 +102,7 @@ async function array_todos_pendientes_scrapeo() {
 }
 
 async function workerScrapePage(nameWorker) {
-    let proxy = await accessResourceProxy(mutexProxy, MyProxy);
+    let proxy = await MyProxy.accessResourceProxy();
     let page = await accessResourcePage();
     if (page === null) { return; }
     const myWorker = new Worker('./workers/worker_scrape_atracciones_by_todo.js',
@@ -129,10 +128,10 @@ async function workerScrapePage(nameWorker) {
 }
 
 
-(async () => {
+const scrapea_paginas_mas_atractivos_x_paises = async () => {
     await dbConnection();
-    let proxy = await accessResourceProxy();
-    const worker = new Worker('../workers/worker_scrape_tipotodo_by_pais.js', { workerData: { 'ip_proxy': proxy } });
+    let proxy = await MyProxy.accessResourceProxy();
+    const worker = new Worker('./workers/worker_scrape_tipotodo_by_pais.js', { workerData: { 'ip_proxy': proxy } });
     worker.on('exit', async (code) => {
         console.log("---> FIN WORKER QUE TRAE LOS PRIMEROS ENLACES");
         const array_todos = await array_todos_pendientes_scrapeo();
@@ -145,5 +144,9 @@ async function workerScrapePage(nameWorker) {
         }
         worker.terminate();
     });
-})();
+};
+
+module.exports = {
+    scrapea_paginas_mas_atractivos_x_paises
+}
 
