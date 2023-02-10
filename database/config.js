@@ -11,11 +11,7 @@ const dbConnection = async() => {
         throw new Error('Error a la hora de iniciar la base de datos');
     }
 }
-const dbSession = async() => {
-    return await mongoose.startSession();
-}
 
 module.exports = {
-    dbConnection,
-    dbSession
+    dbConnection
 }
