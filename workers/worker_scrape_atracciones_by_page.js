@@ -167,14 +167,13 @@ async function extraeAtractivos(page) {
             id_todo: obj_todo._id, 
             idtipotodo_pais: ObjectId(workerData.idtipotodo_pais)});            
           const registro = await _Detalle_tipotodo_todo.save();
-          console.log(aux + "--------------> [DETALLE AGREGADO]"+ registro);
+          //console.log(aux + "--------------> [DETALLE AGREGADO]"+ registro);
         }else{
           console.log(aux + "--------------> [RARO]"+ existe_Detalle_tipotodo_todo);
         }
 
       }
     }
-    console.clear();
     console.log(aux +' - '+ nuevos +' - '+ detalles +' - '+  `-------->  ${workerData.nameWorker} = ${workerData.url}`);
     if(aux !== detalles){
         throw "Error maldito";
