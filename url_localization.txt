@@ -11,6 +11,12 @@
 63e2ce4cd4cf45a7fad1436a 2814 / 2453 = 2451 + 2
 
 
+    const array_idrecursos = [ 
+        "63e2cdb0c174005ef434b789","63e2cd7f7c8e10c9e094d612",
+        "63e2cdc7b457b07198911c1d","63e2cd1a1c94f0581e0f12fe",
+        "63e2cdfe4384b6529dbe455f","63e2cdff4384b6529dbe4563",
+        "63e2ce4cd4cf45a7fad1436a"];
+        
 https://maps.google.com/maps/api/staticmap?&amp;channel=ta.desktop.attraction_review
 &amp;zoom=11
 &amp;size=416x722

@@ -185,7 +185,7 @@ async function extraeAtractivos(page) { //idPagina
             idtipotodo_pais: ObjectId(workerData.idtipotodo_pais)
           });
           const regTodo = await _Detalle_tipotodo_todo.save();
-          await mongo.Todo.updateOne({ _id: regTodo._id }, { $inc: { repetidos: 1 } }) 
+          //await mongo.Todo.updateOne({ _id: regTodo._id }, { $inc: { repetidos: 1 } }) 
         
         } catch (err) {
           throw "Error guardar TODO y su detalle: " + err;
@@ -193,7 +193,7 @@ async function extraeAtractivos(page) { //idPagina
 
       } else {
         
-        await mongo.Todo.updateOne({ _id: registroTodo._id }, { $inc: { repetidos: 1 } })
+        //await mongo.Todo.updateOne({ _id: registroTodo._id }, { $inc: { repetidos: 1 } })
         /**************************************************/
         const existe_Detalle_tipotodo_todo = await mongo.Detalle_tipotodo_todo.find({ $and : [
           {id_tipotodo: ObjectId(workerData.idtipotodo)}, 
@@ -209,20 +209,23 @@ async function extraeAtractivos(page) { //idPagina
             });
             await _Detalle_tipotodo_todo.save();           
         }else{            
-            const todo_original = await mongo.Todo.findOne({ _id: registroTodo._id  });
-            if(todo_original.repetidos > 2){
+            //const todo_original = await mongo.Todo.findOne({ _id: registroTodo._id  });
+            //if(todo_original.repetidos > 2){
                 /***************************************************/
-                const registroTodo_repetido = await mongo.Todo_repetido.findOne({ idtodo: todo_original._id,  idtipotodo_pais:ObjectId(workerData.idtipotodo_pais) });
+                const registroTodo_repetido = await mongo.Todo_repetido.findOne({ 
+                  idtodo: todo_original._id, 
+                  url_padre:workerData.url,   
+                  idtipotodo_pais:ObjectId(workerData.idtipotodo_pais) });
                 if (registroTodo_repetido === null) {
                   await mongo.Todo_repetido.create([{
                     nombre: nombre_final_sin_numeracion(h3Atractivo),
                     url: hrefAtractivo,
                     url_padre: workerData.url,
-                    idtodo:todo_original._id,
+                    idtodo:registroTodo._id,
                     idtipotodo_pais: ObjectId(workerData.idtipotodo_pais)
                   }]); 
                 }
-            }      
+            //}      
         }
         /**************************************************/
       }
