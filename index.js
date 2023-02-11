@@ -4,12 +4,20 @@
 // const {consulta_catidadprevista_vs_scrapeado} = require('./operations/consulta_catidadprevista_vs_scrapeado');
 // consulta_catidadprevista_vs_scrapeado();
 
+
+
+
 (async ()=>{
 
-    const {consulta_eliminar_detalle_tipotodo_todo} = require('./operations/consulta_eliminar_detalle_tipotodo_todo');
-    await consulta_eliminar_detalle_tipotodo_todo();
+    // const {consulta_eliminar_detalle_tipotodo_todo} = require('./operations/consulta_eliminar_detalle_tipotodo_todo');
+    // await consulta_eliminar_detalle_tipotodo_todo();
     
-    const {scrapea_atracciones_x_pagination_para_corregir} = require('./operations/scrapea_atracciones_x_pagination_para_corregir');
-    await scrapea_atracciones_x_pagination_para_corregir();
+    // const {scrapea_atracciones_x_pagination_para_corregir} = require('./operations/scrapea_atracciones_x_pagination_para_corregir');
+    // await scrapea_atracciones_x_pagination_para_corregir();
 
+    const {scrapea_atracciones_x_pagination_autogenerada} = require('./operations/scrapea_atracciones_x_pagination_autogenerada');
+    await scrapea_atracciones_x_pagination_autogenerada();
+
+    // const {consulta_genera_paginas_by_tipotodo_pais} = require('./operations/consulta_genera_paginas_by_tipotodo_pais');
+    // consulta_genera_paginas_by_tipotodo_pais();
 })();

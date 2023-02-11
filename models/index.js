@@ -5,6 +5,7 @@
     const Detalle_todo_lugar = require('./detalle_todo_lugar')
     const Lugar = require('./lugar')
     const Pagina = require('./pagina')
+    const Pagina_autogenerada = require('./pagina_autogenerada')
     const Pais = require('./pais')
     const Tipotodo = require('./tipotodo')
     const Todo = require('./todo')
@@ -18,6 +19,7 @@ module.exports = {
     Detalle_todo_lugar,
     Lugar,
     Pagina,
+    Pagina_autogenerada,
     Pais,
     Tipotodo ,
     Todo,
