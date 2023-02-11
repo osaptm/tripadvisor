@@ -163,7 +163,7 @@ async function extraeAtractivos(page) {
             //if(todo_original.repetidos > 2){
                 /***************************************************/
                 const registroTodo_repetido = await mongo.Todo_repetido.findOne({ 
-                  idtodo: todo_original._id, 
+                  idtodo: registroTodo._id, 
                   url_padre:workerData.url,  
                   idtipotodo_pais:ObjectId(workerData.idtipotodo_pais) 
                 });

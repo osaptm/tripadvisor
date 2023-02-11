@@ -9,7 +9,7 @@ const MyProxy = new MyProxyClass();
 
 const resourceMutex = new mutex();
 var temp_array_pages = [];
-var workers = 10;
+var workers = 7;
 var contador_trabajos = 0;
 var workers_muertos = 0;
 
