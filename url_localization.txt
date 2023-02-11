@@ -1,32 +1,16 @@
-63e2cd925a859147e4aebdba Todos Previstos 34 / 33 https://www.tripadvisor.com.pe/Attractions-g294079-Activities-c42-Paraguay.html
-63e2cd161c94f0581e0f12da Todos Previstos 421 / 419 https://www.tripadvisor.com.pe/Attractions-g294291-Activities-c63-Chile.html
-63e2cd161c94f0581e0f12de Todos Previstos 577 / 575 https://www.tripadvisor.com.pe/Attractions-g294291-Activities-c61-Chile.html
-63e2cd171c94f0581e0f12e2 Todos Previstos 167 / 166 https://www.tripadvisor.com.pe/Attractions-g294291-Activities-c58-Chile.html
-63e2cd7c7c8e10c9e094d5f6 Todos Previstos 10 / 9 https://www.tripadvisor.com.pe/Attractions-g294064-Activities-c61-Uruguay.html
-63e2cd7b7c8e10c9e094d5ee Todos Previstos 150 / 147 https://www.tripadvisor.com.pe/Attractions-g294064-Activities-c42-Uruguay.html
-63e2cdadc174005ef434b76d Todos Previstos 259 / 252 https://www.tripadvisor.com.pe/Attractions-g294071-Activities-c61-Bolivia.html
-63e2cdadc174005ef434b771 Todos Previstos 191 / 184 https://www.tripadvisor.com.pe/Attractions-g294071-Activities-c58-Bolivia.html
-63e2cdc4b457b07198911c05 Todos Previstos 641 / 642 https://www.tripadvisor.com.pe/Attractions-g294073-Activities-c63-Colombia.html
-63e2cdacc174005ef434b765 Todos Previstos 468 / 460 https://www.tripadvisor.com.pe/Attractions-g294071-Activities-c42-Bolivia.html
-63e2cdc5b457b07198911c11 Todos Previstos 366 / 367 https://www.tripadvisor.com.pe/Attractions-g294073-Activities-c36-Colombia.html
-63e2cdfc4384b6529dbe454b Todos Previstos 437 / 405 https://www.tripadvisor.com.pe/Attractions-g294280-Activities-c63-Brazil.html
-63e2cde4c0a97a66d4960181 Todos Previstos 768 / 648 https://www.tripadvisor.com.pe/Attractions-g294324-Activities-oa0-Venezuela.html
-63e2ce48d4cf45a7fad1434a Todos Previstos 278 / 279 https://www.tripadvisor.com.pe/Attractions-g294307-Activities-c63-Ecuador.html
-63e2cdc7b457b07198911c19 Todos Previstos 680 / 649 https://www.tripadvisor.com.pe/Attractions-g294073-Activities-c26-Colombia.html
-63e2cdfc4384b6529dbe454f Todos Previstos 795 / 772 https://www.tripadvisor.com.pe/Attractions-g294280-Activities-c61-Brazil.html
-63e2ce48d4cf45a7fad1434e Todos Previstos 761 / 762 https://www.tripadvisor.com.pe/Attractions-g294307-Activities-c61-Ecuador.html
-63e2cdc4b457b07198911c09 Todos Previstos 889 / 887 https://www.tripadvisor.com.pe/Attractions-g294073-Activities-c61-Colombia.html
-63e2cdc7b457b07198911c1d Todos Previstos 868 / 728 https://www.tripadvisor.com.pe/Attractions-g294073-Activities-c59-Colombia.html
-63e2cd7f7c8e10c9e094d612 Todos Previstos 1188 / 1040 https://www.tripadvisor.com.pe/Attractions-g294064-Activities-oa0-Uruguay.html
-63e2cdb0c174005ef434b789 Todos Previstos 1034 / 901 https://www.tripadvisor.com.pe/Attractions-g294071-Activities-oa0-Bolivia.html
-63e2ce47d4cf45a7fad14346 Todos Previstos 1578 / 1581 https://www.tripadvisor.com.pe/Attractions-g294307-Activities-c42-Ecuador.html
+63e2cd925a859147e4aebdba 34 / 33 = 33 + 0 -> TRIPADVISOR DICE 34 PERO SOLO TIENE 33
+63e2cd7b7c8e10c9e094d5ee 150 / 149 = 149 + 0 -> TRIPADVISOR DICE 150 PERO SOLO TIENE 149
 
-63e2cdc3b457b07198911c01 Todos Previstos 2946 / 2934 https://www.tripadvisor.com.pe/Attractions-g294073-Activities-c42-Colombia.html
-63e2cdfb4384b6529dbe4547 Todos Previstos 3012 / 2975 https://www.tripadvisor.com.pe/Attractions-g294280-Activities-c42-Brazil.html
-63e2cdfe4384b6529dbe455f Todos Previstos 3446 / 3125 https://www.tripadvisor.com.pe/Attractions-g294280-Activities-c26-Brazil.html
-63e2cdff4384b6529dbe4563 Todos Previstos 2568 / 2456 https://www.tripadvisor.com.pe/Attractions-g294280-Activities-c59-Brazil.html
-63e2ce4cd4cf45a7fad1436a Todos Previstos 2813 / 2516 https://www.tripadvisor.com.pe/Attractions-g294307-Activities-oa0-Ecuador.html
-63e2cd1a1c94f0581e0f12fe Todos Previstos 5903 / 5158 https://www.tripadvisor.com.pe/Attractions-g294291-Activities-oa0-Chile.html
+63e2cdc7b457b07198911c1d 868 / 821 = 821 + 0
+63e2cdb0c174005ef434b789 1035 / 902 = 902 + 0
+63e2cd7f7c8e10c9e094d612 1189 / 1039 = 1039 + 0
+
+63e2cd1a1c94f0581e0f12fe 5903 / 5185 = 5158 + 27
+63e2cdc3b457b07198911c01 2942 / 2941 = 2941 + 0
+63e2cdfe4384b6529dbe455f 3445 / 3090 = 3076 + 14
+63e2cdff4384b6529dbe4563 2572 / 2398 = 2390 + 8
+63e2ce4cd4cf45a7fad1436a 2814 / 2453 = 2451 + 2
+
 
 https://maps.google.com/maps/api/staticmap?&amp;channel=ta.desktop.attraction_review
 &amp;zoom=11

@@ -10,6 +10,8 @@ const MyProxy = new MyProxyClass();
 const resourceMutex = new mutex();
 var temp_array_pages = [];
 var workers = 1;
+var contador_trabajos = 0;
+var workers_muertos = 0;
 
 
 const accessResourcePageIndividual = async () => {
@@ -42,14 +44,20 @@ async function onePageIndividual() {
 async function workerScrapeAtraccionesPage(nameWorker) {
     let proxy = await MyProxy.accessResourceProxy();
     let page = await accessResourcePageIndividual();
-    if (page === null) { return; }
+    if (page === null) { 
+        workers_muertos++;
+        console.log(`******************* WORKERS = ${workers} - MUERTOS = ${workers_muertos} - QUEDAN = (${workers - workers_muertos}) *******************`);
+        return; 
+    }
 
     const obj_tipotodo_pais = await mongo.Detalle_tipotodo_pais.findOne({ _id: page.idrecurso });
     if (obj_tipotodo_pais === null) { return; }
 
+    contador_trabajos++;
     const myWorker = new Worker('./workers/worker_scrape_atracciones_by_page.js',
         {
             workerData: {
+                'contador_trabajos': contador_trabajos,
                 'ip_proxy': proxy,
                 'url': page.url_actual,
                 'idpage': page._id.toString(),
@@ -62,8 +70,7 @@ async function workerScrapeAtraccionesPage(nameWorker) {
 
     myWorker.on('exit', async (code) => {
         //console.log("---> (EXIT WORKER) = " + page.url_actual);
-        myWorker.terminate();
-        setTimeout(() => workerScrapeAtraccionesPage(nameWorker), Math.floor((Math.random() * 1000)));
+         workerScrapeAtraccionesPage(nameWorker);
     });
 
 }
@@ -81,17 +88,16 @@ const scrapea_atracciones_x_pagination_para_corregir = async () => {
 
     await dbConnection();
 
-    const array_idrecursos = [ "63e2cd161c94f0581e0f12da", "63e2cd161c94f0581e0f12de", "63e2cd171c94f0581e0f12e2", "63e2cd7b7c8e10c9e094d5ee", "63e2cd7b7c8e10c9e094d5f2", "63e2cd7c7c8e10c9e094d5f6", "63e2cd7f7c8e10c9e094d612", "63e2cd925a859147e4aebdba", "63e2cdacc174005ef434b765", "63e2cdadc174005ef434b76d", "63e2cdadc174005ef434b771", "63e2cdb0c174005ef434b789", "63e2cdc3b457b07198911c01", "63e2cdc4b457b07198911c05", "63e2cdc4b457b07198911c09", "63e2cdc5b457b07198911c11", "63e2cdc7b457b07198911c19", "63e2cdc7b457b07198911c1d", "63e2cde4c0a97a66d4960181", "63e2cdfb4384b6529dbe4547", "63e2cdfc4384b6529dbe454b", "63e2cdfc4384b6529dbe454f", "63e2cdfd4384b6529dbe4553", "63e2cdfe4384b6529dbe455f", "63e2cdff4384b6529dbe4563", "63e2ce47d4cf45a7fad14346", "63e2ce48d4cf45a7fad1434a", "63e2ce48d4cf45a7fad1434e", "63e2ce4cd4cf45a7fad1436a"];
+    const array_idrecursos = [ "63e2cdb0c174005ef434b789","63e2cd7f7c8e10c9e094d612","63e2cdc7b457b07198911c1d","63e2cd1a1c94f0581e0f12fe","63e2cdfe4384b6529dbe455f","63e2cdff4384b6529dbe4563","63e2ce4cd4cf45a7fad1436a"];
     
     let paginas_acumuladas = [];
-    for (let index = 0; index < array_idrecursos.length; index++) {
-        let idrecurso = array_idrecursos[index];   
+    for await(idrecurso of array_idrecursos) { 
         await actualiza_repetidos_todos_x_idtipotodopais(idrecurso);
         console.log("ACTUALZIAMOS REPETIDOS "+idrecurso);
         let paginas_raspar = await mongo.Pagina.find({ idrecurso: ObjectId(idrecurso) , estado_scrapeo_page: {$ne : 'FINALIZADO'} });
-        paginas_acumuladas.push(paginas_raspar);
+        paginas_acumuladas = [...paginas_acumuladas, ...paginas_raspar];
     }  
-    
+
     console.log("TOTAL DE PAGINAS = "+paginas_acumuladas.length);
     if (paginas_acumuladas.length !== 0) {
         temp_array_pages = [...paginas_acumuladas];

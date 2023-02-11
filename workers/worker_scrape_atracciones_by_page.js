@@ -178,7 +178,7 @@ async function extraeAtractivos(page) {
       }
     }
 
-    console.log(`--------> ${workerData.ip_proxy} ${workerData.nameWorker} = ${workerData.url}`);
+    console.log(`${workerData?.contador_trabajos} --------> ${workerData.ip_proxy} ${workerData.nameWorker} = ${workerData.url}`);
 
   } catch (error) {
 
