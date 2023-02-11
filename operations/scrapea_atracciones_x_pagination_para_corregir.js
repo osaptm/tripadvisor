@@ -81,22 +81,20 @@ const scrapea_atracciones_x_pagination_para_corregir = async () => {
 
     await dbConnection();
 
-    const array_idrecursos = ["63e2cc5bd907c58050596c66", "63e2ccf921469f0797359959", "63e2ccfa21469f079735995d", "63e2ccfd21469f0797359975", "63e2cd151c94f0581e0f12d6", "63e2cd161c94f0581e0f12da", "63e2cd161c94f0581e0f12de", "63e2cd171c94f0581e0f12e2", "63e2cd7b7c8e10c9e094d5ee", "63e2cd7b7c8e10c9e094d5f2", "63e2cd7c7c8e10c9e094d5f6", "63e2cd7f7c8e10c9e094d612", "63e2cd925a859147e4aebdba", "63e2cdacc174005ef434b765", "63e2cdadc174005ef434b76d", "63e2cdadc174005ef434b771", "63e2cdb0c174005ef434b789", "63e2cdc3b457b07198911c01", "63e2cdc4b457b07198911c05", "63e2cdc4b457b07198911c09", "63e2cdc5b457b07198911c11", "63e2cdc7b457b07198911c19", "63e2cdc7b457b07198911c1d", "63e2cde4c0a97a66d4960181", "63e2cdfb4384b6529dbe4547", "63e2cdfc4384b6529dbe454b", "63e2cdfc4384b6529dbe454f", "63e2cdfd4384b6529dbe4553", "63e2cdfe4384b6529dbe455f", "63e2cdff4384b6529dbe4563", "63e2ce47d4cf45a7fad14346", "63e2ce48d4cf45a7fad1434a", "63e2ce48d4cf45a7fad1434e", "63e2ce4cd4cf45a7fad1436a"];
+    const array_idrecursos = [ "63e2cd161c94f0581e0f12da", "63e2cd161c94f0581e0f12de", "63e2cd171c94f0581e0f12e2", "63e2cd7b7c8e10c9e094d5ee", "63e2cd7b7c8e10c9e094d5f2", "63e2cd7c7c8e10c9e094d5f6", "63e2cd7f7c8e10c9e094d612", "63e2cd925a859147e4aebdba", "63e2cdacc174005ef434b765", "63e2cdadc174005ef434b76d", "63e2cdadc174005ef434b771", "63e2cdb0c174005ef434b789", "63e2cdc3b457b07198911c01", "63e2cdc4b457b07198911c05", "63e2cdc4b457b07198911c09", "63e2cdc5b457b07198911c11", "63e2cdc7b457b07198911c19", "63e2cdc7b457b07198911c1d", "63e2cde4c0a97a66d4960181", "63e2cdfb4384b6529dbe4547", "63e2cdfc4384b6529dbe454b", "63e2cdfc4384b6529dbe454f", "63e2cdfd4384b6529dbe4553", "63e2cdfe4384b6529dbe455f", "63e2cdff4384b6529dbe4563", "63e2ce47d4cf45a7fad14346", "63e2ce48d4cf45a7fad1434a", "63e2ce48d4cf45a7fad1434e", "63e2ce4cd4cf45a7fad1436a"];
     
-    let idrecurso = array_idrecursos[0];
-
+    let paginas_acumuladas = [];
+    for (let index = 0; index < array_idrecursos.length; index++) {
+        let idrecurso = array_idrecursos[index];   
+        await actualiza_repetidos_todos_x_idtipotodopais(idrecurso);
+        console.log("ACTUALZIAMOS REPETIDOS "+idrecurso);
+        let paginas_raspar = await mongo.Pagina.find({ idrecurso: ObjectId(idrecurso) , estado_scrapeo_page: {$ne : 'FINALIZADO'} });
+        paginas_acumuladas.push(paginas_raspar);
+    }  
     
-    await mongo.Detalle_tipotodo_todo.deleteMany({ idtipotodo_pais: ObjectId(idrecurso) });   
-    console.log("ELIMINAMOS DETALLE")
-    await actualiza_repetidos_todos_x_idtipotodopais(idrecurso);
-    console.log("ACTUALZIAMOS REPETIDOS")
-    await mongo.Pagina.updateMany({ idrecurso: ObjectId(idrecurso)}, {$set : {estado_scrapeo_page: 'PENDING'} });
-    console.log("CAMBIAMOS PAGINAS A PENDIENTE")
-    let paginas_raspar_pending = await mongo.Pagina.find({ idrecurso: ObjectId(idrecurso), estado_scrapeo_page: 'PENDING' });
-    let paginas_raspar_worker = await mongo.Pagina.find({ idrecurso: ObjectId(idrecurso), estado_scrapeo_page: 'INWORKER' });
-
-    if (paginas_raspar_pending.length !== 0 || paginas_raspar_worker.length !== 0) {
-        temp_array_pages = [...paginas_raspar_pending, ...paginas_raspar_worker];
+    console.log("TOTAL DE PAGINAS = "+paginas_acumuladas.length);
+    if (paginas_acumuladas.length !== 0) {
+        temp_array_pages = [...paginas_acumuladas];
         for (let index = 0; index < workers; index++) {
             workerScrapeAtraccionesPage(`( WKR - ${index + 1} )`);
         }
