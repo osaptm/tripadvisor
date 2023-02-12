@@ -9,7 +9,7 @@ const MyProxy = new MyProxyClass();
 
 const resourceMutex = new mutex();
 var temp_array_pages = [];
-var workers = 7;
+var workers = 5;
 var contador_trabajos = 0;
 var workers_muertos = 0;
 
@@ -49,7 +49,7 @@ async function workerScrapeAtraccionesPage(nameWorker) {
         if (page === null) {workers_muertos++;}
     
         const obj_tipotodo_pais = await mongo.Detalle_tipotodo_pais.findOne({ _id: page.idrecurso });
-        if (obj_tipotodo_pais === null) { return; }
+        if (obj_tipotodo_pais === null) { workers_muertos++; }
     
         contador_trabajos++;
         const myWorker = new Worker('./workers/worker_scrape_atracciones_by_page.js',
@@ -68,7 +68,7 @@ async function workerScrapeAtraccionesPage(nameWorker) {
     
         myWorker.on('exit', async (code) => {
             workers_muertos++;
-            // workerScrapeAtraccionesPage(nameWorker); RECURSIVAMENTE
+            workerScrapeAtraccionesPage(nameWorker); RECURSIVAMENTE
         });
 
     } catch (error) {         
@@ -111,7 +111,7 @@ const scrapea_atracciones_x_pagination_para_corregir = async () => {
             for (let index = 0; index < workers; index++) {
                 setTimeout(() => {
                     workerScrapeAtraccionesPage(`( WKR - ${index + 1} )`);
-                }, index*1000);
+                }, index*100);
             }
         } else {
             console.log("SIN PAGINAS PARA RASPAR");

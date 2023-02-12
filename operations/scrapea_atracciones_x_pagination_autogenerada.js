@@ -3,6 +3,7 @@ const mutex = require('async-mutex').Mutex;
 const { dbConnection } = require('../database/config'); // Base de Datoos Mongo
 const mongo = require('../models');
 const { MyProxyClass} = require('../helpers/funciones');
+const { exec } = require('child_process');
 const { ObjectId } = require('mongoose').Types; // Para usar ObjectId y comprar
 require('dotenv').config(); // Variables de entorno
 const MyProxy = new MyProxyClass();
@@ -120,6 +121,35 @@ const scrapea_atracciones_x_pagination_autogenerada = async () => {
         setInterval(() => {
            if(workers_muertos === workers) {
             console.log("FINALIZAR EL PROGRAMA");
+
+            // exec("sync; echo 1 > /proc/sys/vm/drop_caches", (err, stdout, stderr) => {
+            //     if (err) {
+            //         console.error(`exec error: ${err}`);
+            //         return;
+            //     }
+            //     console.log(`stdout: ${stdout}`);
+            //     console.log(`stderr: ${stderr}`);
+            // });
+
+            exec('echo %temp%', (err, stdout, stderr) => {
+                if(err) {
+                    console.log(`Error: ${err}`);
+                    return;
+                }
+            
+                console.log(`Output is: ${stdout}`);
+            
+                exec(`del /q /s ${stdout}`, (err, stdout, stderr) => {
+                    if(err) {
+                        console.log(`Error: ${err}`);
+                        return;
+                    }
+            
+                    console.log(`Memoria liberada!`);
+                });
+            });
+
+
             process.exit();
            }
         }, 2000);
