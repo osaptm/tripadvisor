@@ -3,13 +3,14 @@ const mutex = require('async-mutex').Mutex;
 const { dbConnection } = require('../database/config'); // Base de Datoos Mongo
 const mongo = require('../models');
 const { MyProxyClass} = require('../helpers/funciones');
+const { exec } = require('child_process');
 const { ObjectId } = require('mongoose').Types; // Para usar ObjectId y comprar
 require('dotenv').config(); // Variables de entorno
 const MyProxy = new MyProxyClass();
 
 const resourceMutex = new mutex();
 var temp_array_pages = [];
-var workers = 5;
+var workers = 1;
 var contador_trabajos = 0;
 var workers_muertos = 0;
 
@@ -33,10 +34,10 @@ async function onePageIndividual() {
     temp_array_pages.splice(position, 1);
 
     try {
-        const afectado = await mongo.Pagina.updateOne({ _id: page._id }, { $set: { estado_scrapeo_page: 'INWORKER' } });
+        //const afectado = await mongo.Pagina_autogenerada.updateOne({ _id: page._id }, { $set: { estado_scrapeo_page: 'INWORKER' } });
         return page;
     } catch (error) {
-        console.log(" --- ERROR AL CAMBIAR ESTADO A LA PAGINA A SCRAPEAR");
+        console.log(" --- ERROR onePageIndividual AL CAMBIAR ESTADO A LA PAGINA A SCRAPEAR");
         return null;
     }
 }
@@ -46,29 +47,22 @@ async function workerScrapeAtraccionesPage(nameWorker) {
         
         let proxy = await MyProxy.accessResourceProxy();
         let page = await accessResourcePageIndividual();
-        if (page === null) {workers_muertos++; return null;}
-    
-        const obj_tipotodo_pais = await mongo.Detalle_tipotodo_pais.findOne({ _id: page.idrecurso });
-        if (obj_tipotodo_pais === null) { workers_muertos++; return null;}
+        if (page === null) {workers_muertos++;}
     
         contador_trabajos++;
-        const myWorker = new Worker('./workers/worker_scrape_atracciones_by_page.js',
+        const myWorker = new Worker('./workers/_atractivos.js',
             {
                 workerData: {
                     'contador_trabajos': contador_trabajos,
                     'ip_proxy': proxy,
-                    'url': page.url_actual,
-                    'idpage': page._id.toString(),
-                    'idpais': obj_tipotodo_pais.pais.toString(),
-                    'idtipotodo': obj_tipotodo_pais.tipotodo.toString(),
-                    'idtipotodo_pais': obj_tipotodo_pais._id.toString(),
+                    'url': page.url,                   
                     'nameWorker': nameWorker
                 }
             });
     
         myWorker.on('exit', async (code) => {
-            //workers_muertos++;
-            workerScrapeAtraccionesPage(nameWorker);
+            workers_muertos++;
+            // workerScrapeAtraccionesPage(nameWorker);
         });
 
     } catch (error) {         
@@ -77,28 +71,12 @@ async function workerScrapeAtraccionesPage(nameWorker) {
 
 }
 
-const scrapea_atracciones_x_pagination_para_corregir = async () => {
+const scrapea_data_x_todo = async () => {
     try {
         await dbConnection();
 
-        const array_idrecursos = [ 
-            "63e2cc5cd907c58050596c6e",
-            "63e2ccfe21469f079735997d",
-            "63e2cd1a1c94f0581e0f12fe",
-            "63e2cd7f7c8e10c9e094d612",
-            "63e2cdc8b457b07198911c25",
-            "63e2cdfe4384b6529dbe455f",
-            "63e2cdff4384b6529dbe4563",
-            "63e2ce004384b6529dbe456b",
-            "63e2ce4cd4cf45a7fad1436a"
-         ];
-
-        let paginas_acumuladas = [];
-        for await (idrecurso of array_idrecursos) {
-            let paginas_raspar = await mongo.Pagina.find({ idrecurso: ObjectId(idrecurso), estado_scrapeo_page: { $ne: 'FINALIZADO' } });
-            paginas_acumuladas = [...paginas_acumuladas, ...paginas_raspar];
-        }
-
+        let paginas_acumuladas = await mongo.Todo.find({estado_scrapeo_page: { $ne: 'FINALIZADO' }}).skip(0).limit(1);
+          
         console.log("TOTAL DE PAGINAS = " + paginas_acumuladas.length);
 
         if (paginas_acumuladas.length !== 0) {
@@ -106,7 +84,7 @@ const scrapea_atracciones_x_pagination_para_corregir = async () => {
             for (let index = 0; index < workers; index++) {
                 setTimeout(() => {
                     workerScrapeAtraccionesPage(`( WKR - ${index + 1} )`);
-                }, index*100);
+                }, index*1000);
             }
         } else {
             console.log("SIN PAGINAS PARA RASPAR");
@@ -127,5 +105,5 @@ const scrapea_atracciones_x_pagination_para_corregir = async () => {
 };
 
 module.exports = {
-    scrapea_atracciones_x_pagination_para_corregir
+    scrapea_data_x_todo
 }

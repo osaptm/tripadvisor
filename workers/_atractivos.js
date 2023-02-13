@@ -1,5 +1,4 @@
-const cheerio = require('cheerio');
-const mongo = require('../database/database');
+const mongo = require('../database/config');
 const { workerData } = require('worker_threads');
 const { ObjectId } = require('mongoose').Types;
 require('dotenv').config();
@@ -48,7 +47,7 @@ async function get_h1_page(page){
 // ****************************************** MAIN  ******************************************** //
 (async () => {
   try {
-    const url = workerData.atractivo.url;
+    const url = workerData.url;
     const newProxyUrl = await proxyChain.anonymizeProxy(proxyUrl);
     // Abrimos un Navegador Chromiun
     const browser = await puppeteer.launch({
@@ -69,9 +68,11 @@ async function get_h1_page(page){
       await page.reload();
       await page.waitForSelector(".PZxoo", { timeout: tiempo_espera });
     }
-    
+
+    console.log(`${workerData?.contador_trabajos} --------> ${workerData.ip_proxy} ${workerData.nameWorker} = ${workerData.url}`);
+
     console.log(await get_breadcrumbs(page, url));
-    console.log(await get_h1_page);
+    console.log(await get_h1_page(page));
 
     // const seccion_categorias_reviews = await page.$("section div[data-automation='WebPresentation_PoiOverviewWeb']");
     // const categorias_reviews = await seccion_categorias_reviews.$$(".kUaIL");

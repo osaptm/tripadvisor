@@ -9,6 +9,7 @@
     const Pais = require('./pais')
     const Tipotodo = require('./tipotodo')
     const Todo = require('./todo')
+    const Todo_auxiliar = require('./todo_auxiliar')
     const Todo_repetido = require('./todo_repetido')
 
 module.exports = {
@@ -23,5 +24,6 @@ module.exports = {
     Pais,
     Tipotodo ,
     Todo,
+    Todo_auxiliar,
     Todo_repetido,
 }

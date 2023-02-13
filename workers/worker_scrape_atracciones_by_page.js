@@ -115,27 +115,38 @@ async function extraeAtractivos(page) {
 
       let registroTodo = null;
       if (hrefAtractivo.trim() !== "") {
+
+        /***************** TODO AUX SOLO PARA PRUEBAS DE DB ******/
+        // await mongo.Todo_auxiliar.create([{
+        //   nombre: nombre_final_sin_numeracion(h3Atractivo),
+        //   url: hrefAtractivo,
+        // }]);
+        /***************** TODO AUX SOLO PARA PRUEBAS DE DB ******/
+
         registroTodo = await mongo.Todo.findOne({ url: hrefAtractivo });
+
       } else {
         throw "Error hrefAtractivo VACIO";
       }
 
       if (registroTodo === null) {
         try {
+
+          console.log("---> NUEVO TODO ADGREGADO");
           const data = {
             nombre: nombre_final_sin_numeracion(h3Atractivo),
             url: hrefAtractivo,
             pais: ObjectId(workerData.idpais),
           }
-
           const document = await mongo.Todo.create([data]);
           const _Detalle_tipotodo_todo = new mongo.Detalle_tipotodo_todo({
             id_tipotodo: ObjectId(workerData.idtipotodo),
             id_todo: document[0]._id,
-            idtipotodo_pais: ObjectId(workerData.idtipotodo_pais)
+            idtipotodo_pais: ObjectId(workerData.idtipotodo_pais),
+            url_padre: workerData.url,
           });
-          const regTodo = await _Detalle_tipotodo_todo.save();
-          //await mongo.Todo.updateOne({ _id: regTodo._id }, { $inc: { repetidos: 1 } }) 
+
+          await _Detalle_tipotodo_todo.save();    
 
         } catch (err) {
           throw "Error guardar TODO y su detalle: " + err;
@@ -143,8 +154,6 @@ async function extraeAtractivos(page) {
 
       } else {
         
-        //await mongo.Todo.updateOne({ _id: registroTodo._id }, { $inc: { repetidos: 1 } })
-        /**************************************************/
         const existe_Detalle_tipotodo_todo = await mongo.Detalle_tipotodo_todo.find({ $and : [
           {id_tipotodo: ObjectId(workerData.idtipotodo)}, 
           {id_todo: registroTodo._id},
@@ -155,13 +164,14 @@ async function extraeAtractivos(page) {
             const _Detalle_tipotodo_todo = new mongo.Detalle_tipotodo_todo({
               id_tipotodo: ObjectId(workerData.idtipotodo),
               id_todo: registroTodo._id,
-              idtipotodo_pais: ObjectId(workerData.idtipotodo_pais)
+              idtipotodo_pais: ObjectId(workerData.idtipotodo_pais),
+              url_padre: workerData.url,
             });
             await _Detalle_tipotodo_todo.save();           
         }else{            
-            //const todo_original = await mongo.Todo.findOne({ _id: registroTodo._id  });
-            //if(todo_original.repetidos > 2){
-                /***************************************************/
+
+            if(workerData.url !== existe_Detalle_tipotodo_todo.url_padre){
+
                 const registroTodo_repetido = await mongo.Todo_repetido.findOne({ 
                   idtodo: registroTodo._id, 
                   url_padre:workerData.url,  
@@ -176,13 +186,15 @@ async function extraeAtractivos(page) {
                     idtipotodo_pais: ObjectId(workerData.idtipotodo_pais)
                   }]); 
                 }
-           // }      
+
+            }
+    
         }
         /**************************************************/
       }
     }
 
-    console.log(`${workerData?.contador_trabajos} --------> ${workerData.ip_proxy} ${workerData.nameWorker} = ${workerData.url}`);
+    console.log(`${workerData?.contador_trabajos} -> ${workerData?.ip_proxy} ${workerData?.nameWorker} / ${elements.length} - ${workerData?.url}`);
 
   } catch (error) {
 
