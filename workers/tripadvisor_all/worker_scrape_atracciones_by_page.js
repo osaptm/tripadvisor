@@ -132,7 +132,7 @@ async function extraeAtractivos(page) {
       if (registroTodo === null) {
         try {
 
-          console.log("---> NUEVO TODO ADGREGADO");
+          console.log("---> NUEVO "+hrefAtractivo);
           const data = {
             nombre: nombre_final_sin_numeracion(h3Atractivo),
             url: hrefAtractivo,
