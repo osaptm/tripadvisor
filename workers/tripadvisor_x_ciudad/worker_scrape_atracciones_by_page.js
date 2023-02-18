@@ -12,6 +12,7 @@ const proxyUrl = 'http://prueba:123@' + workerData.ip_proxy;
 const tiempo_espera = 30000;
 
 function nombre_final_sin_numeracion(nombre) {
+  if(!nombre.includes('. ')) return nombre;
   const nombre_final_array = nombre.split('. ');
   const eliminar_primero = nombre_final_array.shift();
   const nombre_final = nombre_final_array.join('');
@@ -37,17 +38,10 @@ async function mainWorker() {
     try {
       await page.waitForSelector(".jemSU", { timeout: tiempo_espera });
     } catch (error) {
+      console.log(workerData.url);
       console.log("Error en Esperar Al Inicio -> Elemento .jemSU");
       await page.reload();
       await page.waitForSelector(".jemSU", { timeout: tiempo_espera });
-    }
-
-    try {
-      await page.waitForSelector(".jemSU[data-automation='WebPresentation_WebSortDisclaimer']", { timeout: tiempo_espera });
-    } catch (error) {
-      console.log("Error en Esperar Al Inicio -> Elemento .jemSU[data-automation='WebPresentation_WebSortDisclaimer']");
-      await page.reload();
-      await page.waitForSelector(".jemSU[data-automation='WebPresentation_WebSortDisclaimer']", { timeout: tiempo_espera });
     }
 
     await extraeAtractivos(page);
@@ -116,7 +110,7 @@ async function extraeAtractivos(page) {
           }
           const document = await mongo.Atraccion.create([data]);
           const _Atraccion_x_categoria = new mongo.Atraccion_x_categoria({
-            id_categoria_atraccion: ObjectId(workerData.id_categoira_atraccion),
+            id_categoria_atraccion: ObjectId(workerData.id_categoria_atraccion),
             id_atraccion: document[0]._id,
             id_categoria_atraccion_ciudad: ObjectId(workerData.idrecurso),
             url_padre: workerData.url,
@@ -130,29 +124,31 @@ async function extraeAtractivos(page) {
 
       } else {
         
-        const existe_Atraccion_x_categoria = await mongo.Atraccion_x_categoria.find({ $and : [
-          {id_categoria_atraccion: ObjectId(workerData.id_categoria_atraccion)}, 
-          {id_atraccion: objAtraccion._id},
-          {id_categoria_atraccion_ciudad: ObjectId(workerData.idrecurso)},
-        ]})
+        const existe_Atraccion_x_categoria = await mongo.Atraccion_x_categoria.find({ 
+          id_categoria_atraccion: ObjectId(workerData.id_categoria_atraccion), 
+          id_atraccion: objAtraccion._id,
+          id_categoria_atraccion_ciudad: ObjectId(workerData.idrecurso)
+        })
 
-        if (existe_Atraccion_x_categoria.length === 0) {
+          if (existe_Atraccion_x_categoria.length === 0) {
+
           const _Atraccion_x_categoria = new mongo.Atraccion_x_categoria({
-            id_categoria_atraccion: ObjectId(workerData.id_categoira_atraccion),
+            id_categoria_atraccion: ObjectId(workerData.id_categoria_atraccion),
             id_atraccion: objAtraccion._id,
             id_categoria_atraccion_ciudad: ObjectId(workerData.idrecurso),
             url_padre: workerData.url,
           });
-          await _Atraccion_x_categoria.save();       
+          await _Atraccion_x_categoria.save();   
+
         }else{            
 
-            if(workerData.url !== existe_Atraccion_x_categoria.url_padre){
-
+            if(workerData.url !== existe_Atraccion_x_categoria[0].url_padre){               
                 const objAtraccion_repetido = await mongo.Atraccion_repetida.findOne({ 
                   id_atraccion: objAtraccion._id, 
                   url_padre:workerData.url,  
                   id_categoria_atraccion_ciudad:ObjectId(workerData.idrecurso) 
                 });
+
                 if (objAtraccion_repetido === null) {
                   await mongo.Atraccion_repetida.create([{
                     nombre: nombre_final_sin_numeracion(h3Atractivo),
@@ -175,7 +171,7 @@ async function extraeAtractivos(page) {
   } catch (error) {
 
     await mongo.Pagina.updateOne({ _id: ObjectId(workerData.idpage) }, { $set: { estado_scrapeo_page: 'PENDING' } });
-    console.log('Error en extraeAtractivos', error);
+    console.log('Error en extraeAtractivos '+workerData?.url, error);
     process.exit();
 
   }

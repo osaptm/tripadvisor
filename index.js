@@ -35,6 +35,7 @@ const { ObjectId } = require('mongoose').Types;
 (async () => {
 
     try {
+
         // const paso_2 = require('./operations/tripadvisor_x_ciudad/paso_2_generar_paginas_scrapeo');
         // await paso_2();
 
@@ -46,6 +47,9 @@ const { ObjectId } = require('mongoose').Types;
 
         const paso_5 = require('./operations/tripadvisor_x_ciudad/paso_5_scrapea_atracciones_x_pagination');
         await paso_5();
+
+        // const paso_6 = require('./operations/tripadvisor_x_ciudad/paso_6_consulta_catidadprevista_vs_scrapeado');
+        // await paso_6();
 
     } catch (error) {
         console.log("FINALIZAMOS TAREAS" + error);

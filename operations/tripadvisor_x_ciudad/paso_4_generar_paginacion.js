@@ -1,15 +1,7 @@
 const { db_tripadvisor_x_ciudad } = require('../../database/config');
 const mongo = require('../../models/tripadvisor_x_ciudad');
 const { ObjectId } = require('mongoose').Types;
-
-async function gerera_url_ciudad_x_categoria_atraccion(url_ciudad, identificador){    
-    let nueva_url = url_ciudad.replace('-oa0-','-');
-    nueva_url = nueva_url.replace(/(\-Activities\-)/,`$1${identificador}-`);
-    return nueva_url;
-}
-
 async function paso_4(){
-
     try {
         // NUEVA CONEXION MONGO
         await db_tripadvisor_x_ciudad();
@@ -30,7 +22,7 @@ async function paso_4(){
                         id_categoria_atraccion_ciudad: consulta[index]._id
                     });   
 
-                    if(existe) continue;
+                    if(existe !== null) continue;
                     
                     await mongo.Pagina.create([{
                     url_actual: consulta[index].url,
@@ -52,7 +44,7 @@ async function paso_4(){
                             id_categoria_atraccion_ciudad: idrecurso
                         });   
 
-                        if(!existe) {
+                        if(existe===null) {
                             await mongo.Pagina.create([{
                             url_actual: url,
                             numero_actual: 1,
@@ -62,33 +54,33 @@ async function paso_4(){
 
                     }
     
-                    for (let index = 2; index <= enteroPag; index++) {
+                    for (let w = 1; w < enteroPag; w++) {
                         nueva_url = ""; 
                         const codigo_url_oa0 = url.match(/\-oa0-/);
                         if(codigo_url_oa0 !== null){
-                           nueva_url = url.replace(/\-oa0-/,`-oa${cantidad_por_pagina*index}-`);
+                           nueva_url = url.replace(/\-oa0-/,`-oa${cantidad_por_pagina*w}-`);
                         }else{
                             const codigo_url_c = url.match(/\-c\d+\-/);
                             if(codigo_url_c !== null){
-                                nueva_url = url.replace(/(\-c\d+\-)/,`$1oa${cantidad_por_pagina*index}-`);
+                                nueva_url = url.replace(/(\-c\d+\-)/,`$1oa${cantidad_por_pagina*w}-`);
                             }
                         }
                         if(nueva_url!==""){
                            
                             existe = await mongo.Pagina.findOne({
                                 url_actual: nueva_url,
-                                numero_actual: index,
+                                numero_actual: (w+1),
                                 id_categoria_atraccion_ciudad: idrecurso
                             });   
     
-                            if(!existe) {
+                            if(existe === null) {
                                 await mongo.Pagina.create([{
-                                url_actual: url,
-                                numero_actual: index,
+                                url_actual: nueva_url,
+                                numero_actual: (w+1),
                                 id_categoria_atraccion_ciudad: idrecurso
                                 }]);
                              }else{
-                                await mongo.Pagina.updateOne({_id:existe._id},{numero_actual: index});
+                                await mongo.Pagina.updateOne({_id:existe._id},{numero_actual: (w+1)});
                              }
                            
                         }

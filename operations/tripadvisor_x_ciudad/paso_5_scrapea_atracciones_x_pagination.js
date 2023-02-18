@@ -60,7 +60,7 @@ async function workerScrapeAtraccionesPage(nameWorker) {
                     'idpage': page._id.toString(),                    
                     'numero_atracciones': Categoria_atraccion_ciudad.numero_atracciones,
                     'id_ciudad': Categoria_atraccion_ciudad.id_ciudad.toString(),
-                    'id_categoira_atraccion': Categoria_atraccion_ciudad.id_categoira_atraccion.toString(),
+                    'id_categoria_atraccion': Categoria_atraccion_ciudad.id_categoira_atraccion.toString(),
                     'idrecurso': Categoria_atraccion_ciudad._id.toString(),
                     'nameWorker': nameWorker
                 }

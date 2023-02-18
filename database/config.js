@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const IP_SERVER = "34.28.228.201";
+const IP_SERVER = "35.225.155.60";
 const OPCIONES_MONGO = "?directConnection=true&authMechanism=DEFAULT&authSource=admin&replicaSet=rs0&w=majority";
 
 const db_tripadvisor_all = async() => {
