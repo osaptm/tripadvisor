@@ -13,8 +13,17 @@ const Atraccion = Schema({
         type: String,
         required: true,
         default: 'PENDING',
-        emun: ['PENDING', 'FINALIZADO']
-    }
+        emun: ['PENDING', 'INWORKER','FINALIZADO']
+    },
+    h1_page: { type: String},  
+    breadcrumbs: { type: Object}, 
+    categorias_reviews: { type: Object},  
+    acerca: {type: Object},  
+    fotos: {type: Object},  
+    disfrutar: {type: Object},  
+    location: {type: Object},  
+    opiniones: {type: Object}, 
+    cantidad_scrapeado: {type: Number, default: 0}  
 });
 
 module.exports = model('Atraccion', Atraccion);  
