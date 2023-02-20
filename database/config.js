@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 require('dotenv').config();
-const IP_SERVER = process.env.IP_SERVER;
+const IP_MONGO = process.env.IP_MONGO;
 const OPCIONES_MONGO = process.env.OPCIONES_MONGO;
 const USER_MONGO = process.env.USER_MONGO;
 const PASS_MONGO = process.env.PASS_MONGO;
