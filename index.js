@@ -21,11 +21,15 @@ const { ObjectId } = require('mongoose').Types;
         // const paso_6 = require('./operations/tripadvisor_x_ciudad/paso_6_consulta_catidadprevista_vs_scrapeado');
         // await paso_6();
 
-        const paso_7 = require('./operations/tripadvisor_x_ciudad/paso_7_scrapea_data_x_atraccion');
-        await paso_7();
+        // const paso_7 = require('./operations/tripadvisor_x_ciudad/paso_7_scrapea_data_x_atraccion');
+        // await paso_7();
 
-        // await db_tripadvisor_x_ciudad();
-        //await mongo.Pagina.updateMany({},{$set:{estado_scrapeo_page:'PENDING'}});
+        const paso_8 = require('./operations/tripadvisor_x_ciudad/paso_8_scrapear_comentarios');
+        await paso_8();
+
+        // await db_tripadvisor_x_ciudad();        
+        // const atracciones = await mongo.Atraccion.find({});       
+        // process.exit();
 
     } catch (error) {
         console.log("FINALIZAMOS TAREAS" + error);

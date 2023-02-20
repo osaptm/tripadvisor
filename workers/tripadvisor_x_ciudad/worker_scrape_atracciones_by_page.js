@@ -59,6 +59,8 @@ async function mainWorker() {
     await mongo.Pagina.updateOne({ _id: ObjectId(workerData.idpage) }, { $set: { estado_scrapeo_page: 'PENDING' } });
     console.log('ERROR EN MAIN ' + workerData.ip_proxy, error);
     mongoose.connection.close();
+    await page.close();
+    await browser.close();
     process.exit();
 
   }

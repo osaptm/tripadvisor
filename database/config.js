@@ -7,7 +7,7 @@ const PASS_MONGO = process.env.PASS_MONGO;
 const db_tripadvisor_all = async() => {
     try {
         mongoose.set('strictQuery', false);          
-        mongoose.connect('mongodb://'+USER_MONGO+':'+PASS_MONGO+'@'+IP_SERVER+':27017/tripadvisor_all'+OPCIONES_MONGO, {
+        mongoose.connect('mongodb://'+USER_MONGO+':'+PASS_MONGO+'@'+IP_MONGO+':27017/tripadvisor_all'+OPCIONES_MONGO, {
             useNewUrlParser: true,
             useUnifiedTopology: true,
         }); 
@@ -19,7 +19,7 @@ const db_tripadvisor_all = async() => {
 const db_tripadvisor_x_ciudad = async() => {
     try {
         mongoose.set('strictQuery', false);          
-        mongoose.connect('mongodb://'+USER_MONGO+':'+PASS_MONGO+'@'+IP_SERVER+':27017/tripadvisor_x_ciudad'+OPCIONES_MONGO, {
+        mongoose.connect('mongodb://'+USER_MONGO+':'+PASS_MONGO+'@'+IP_MONGO+':27017/tripadvisor_x_ciudad'+OPCIONES_MONGO, {
             useNewUrlParser: true,
             useUnifiedTopology: true,
         }); 

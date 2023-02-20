@@ -22,6 +22,7 @@ function nombre_final_sin_numeracion(nombre) {
 
 async function get_h1_page(page) {
   const h1_page = await page.$("h1");
+  if(!h1_page) return "";
   return await (await h1_page.getProperty('textContent')).jsonValue();
 }
 
@@ -48,7 +49,7 @@ async function get_breadcrumbs(page, url_actual) {
 
 
 async function get_seccion_categorias_reviews(page) {
-  const obj_categorias_reviews = {datos: []};
+  const obj_categorias_reviews = {};
   const seccion_categorias_reviews = await page.$("section div[data-automation='WebPresentation_PoiOverviewWeb']");
   if(!seccion_categorias_reviews){ return obj_categorias_reviews;}
 
@@ -61,19 +62,22 @@ async function get_seccion_categorias_reviews(page) {
       //const attrValue = await element.$eval('.jVDab', el => el.getAttribute('aria-label'));
       const separar_valores = attrValue.split("burbujas.");
       const puntuacion = separar_valores[0].trim();
-      const numero_reviews = (separar_valores[1].replace("opiniones", "")).trim();
-      obj_categorias_reviews.datos.push({ info: 'reviews', valor: numero_reviews });
-      obj_categorias_reviews.datos.push({ info: 'puntuacion', valor: puntuacion });
+      let numero_reviews = (separar_valores[1].replace("opiniones", "")).trim();
+      numero_reviews = (numero_reviews.replace("opinión", "")).trim();
+      numero_reviews = (numero_reviews.replace(",", "")).trim();
+      numero_reviews = (numero_reviews.replace(".", "")).trim();
+      obj_categorias_reviews['reviews'] = Number(numero_reviews);
+      obj_categorias_reviews['puntuacion'] = puntuacion;
     }
 
     const texto_ = await (await element.getProperty('textContent')).jsonValue();
 
     if (texto_.includes("N.º")) {
-      obj_categorias_reviews.datos.push({ info: 'ranking', valor: texto_ });
+      obj_categorias_reviews['ranking'] = texto_;
     }
 
     if (texto_.includes("Leer más")) {
-      obj_categorias_reviews.datos.push({ info: 'categoria', valor: texto_.replace("Leer más", "").trim() });
+      obj_categorias_reviews['categoria'] = texto_.replace("Leer más", "").trim();
     }
 
   }
@@ -83,16 +87,18 @@ async function get_seccion_categorias_reviews(page) {
 
 
 async function get_seccion_acerca(page) {
-  const obj_seccion_acerca = { datos: [] };
+  const obj_seccion_acerca = {};
   const seccion_acerca = await page.$(".QvCXh > .yNgTB");
   if (seccion_acerca) {
     const acerca = await seccion_acerca.$(".WRRwX");
+    if(!acerca) return obj_seccion_acerca;
+    
     const duracion = await acerca.$(".tyUdl > ._c");
     let texto_ = "";
     if (duracion) {
       texto_ = await (await duracion.getProperty('textContent')).jsonValue();
       if (texto_.trim() !== "") {
-        obj_seccion_acerca.datos.push({ info: 'duracion', valor: texto_ });
+        obj_seccion_acerca['duracion'] = texto_ ;
       }
     }
     texto_ = "";
@@ -103,9 +109,9 @@ async function get_seccion_acerca(page) {
 
         const soles = texto_.split("S/");
         if (soles.length !== 2) {
-          obj_seccion_acerca.datos.push({ info: 'entrada', valor: texto_ });
+          obj_seccion_acerca['entrada'] = texto_ ;
         } else {
-          obj_seccion_acerca.datos.push({ info: 'entrada', valor: soles[1].trim() });
+          obj_seccion_acerca['entrada'] = soles[1].trim() ;
         }
 
       }
@@ -151,7 +157,7 @@ async function get_disfrutar(page) {
 }
 
 async function get_location(page) {
-  const obj_location = { datos: [] };
+  const obj_location = { };
 
   try {
     await page.waitForSelector("div[data-automation='WebPresentation_PoiLocationSectionGroup'] > .QvCXh > .AcNPX > .gptQH > .C > .YWGPI > span > img", { timeout: tiempo_espera });
@@ -173,7 +179,7 @@ async function get_location(page) {
       const array_querys = src_location.split("&");
       for (const query of array_querys) {
         if (query.includes("center")) {
-          obj_location.datos.push(query.replace("center=", "").trim());
+          obj_location['coordenadas'] = query.replace("center=", "").trim();
         }
       }
     }
@@ -185,7 +191,7 @@ async function get_location(page) {
 
 
 async function get_opiniones(page) {
-  const obj_opiniones = { datos: [] };
+  const obj_opiniones = {};
   const existen_reviews = await get_seccion_categorias_reviews(page);
   if (existen_reviews.datos.length !== 0) {
     for (const dato of existen_reviews.datos) {
@@ -211,23 +217,23 @@ async function get_opiniones(page) {
               let numero_por_opinion = "";
               if (texto_.includes("Excelente")) {
                 numero_por_opinion = ((texto_.replace("Excelente", "")).replace(',', '')).replace('.', '');
-                obj_opiniones.datos.push({ info: 'Excelente', valor: numero_por_opinion });
+                obj_opiniones['Excelente'] = Number(numero_por_opinion);
               }
               if (texto_.includes("Muy bueno")) {
                 numero_por_opinion = ((texto_.replace("Muy bueno", "")).replace(',', '')).replace('.', '');
-                obj_opiniones.datos.push({ info: 'Muy bueno', valor: numero_por_opinion });
+                obj_opiniones['Muy_bueno'] =Number(numero_por_opinion);
               }
               if (texto_.includes("Promedio")) {
                 numero_por_opinion = ((texto_.replace("Promedio", "")).replace(',', '')).replace('.', '');
-                obj_opiniones.datos.push({ info: 'Promedio', valor: numero_por_opinion });
+                obj_opiniones['Promedio'] = Number(numero_por_opinion);
               }
               if (texto_.includes("Mala")) {
                 numero_por_opinion = ((texto_.replace("Mala", "")).replace(',', '')).replace('.', '');
-                obj_opiniones.datos.push({ info: 'Mala', valor: numero_por_opinion });
+                obj_opiniones['Mala'] = Number(numero_por_opinion);
               }
               if (texto_.includes("Horrible")) {
                 numero_por_opinion = ((texto_.replace("Horrible", "")).replace(',', '')).replace('.', '');
-                obj_opiniones.datos.push({ info: 'Horrible', valor: numero_por_opinion });
+                obj_opiniones['Horrible'] = Number(numero_por_opinion);
               }
             }
           }
@@ -269,21 +275,29 @@ async function get_opiniones(page) {
 
     let cantidad_scrapeado = 0;
     const location = await get_location(page); 
-      if(location.datos.length !== 0) cantidad_scrapeado ++;      
+      if( Object(location).keys().length !== 0) cantidad_scrapeado ++;     
+
     const h1_page = await get_h1_page(page);
       if(h1_page.trim() !== "") cantidad_scrapeado ++;
+
     const breadcrumbs = await get_breadcrumbs(page, url);
       if(breadcrumbs.datos.length !== 0) cantidad_scrapeado ++; 
+
     const seccion_categorias_reviews = await get_seccion_categorias_reviews(page);
-      if(seccion_categorias_reviews.datos.length !== 0) cantidad_scrapeado ++;     
+      if( Object(seccion_categorias_reviews).keys().length !== 0) cantidad_scrapeado ++;  
+
     const seccion_acerca = await get_seccion_acerca(page);
-      if(seccion_acerca.datos.length !== 0) cantidad_scrapeado ++;     
+      if( Object(seccion_acerca).keys().length !== 0) cantidad_scrapeado ++;  
+
     const seccion_fotos = await get_seccion_fotos(page);  
-      if(seccion_fotos.datos.length !== 0) cantidad_scrapeado ++;   
+      if(seccion_fotos.datos.length !== 0) cantidad_scrapeado ++; 
+
     const disfrutar = await get_disfrutar(page);   
-      if(disfrutar.datos.length !== 0) cantidad_scrapeado ++;    
+      if(disfrutar.datos.length !== 0) cantidad_scrapeado ++; 
+
     const opiniones = await get_opiniones(page); 
-      if(opiniones.datos.length !== 0) cantidad_scrapeado ++; 
+      if(Object(opiniones).keys().length !== 0) cantidad_scrapeado ++; 
+
 
     await mongo.Atraccion.updateOne({ _id: workerData.idatraccion }, { $set: { 
       estado_scrapeo: 'FINALIZADO',
@@ -301,6 +315,8 @@ async function get_opiniones(page) {
     const title_page = await page.title(); 
     console.log(`${workerData?.contador_trabajos} -> ${workerData.ip_proxy} ${workerData.nameWorker}\n${title_page}\n${workerData.url}`);
 
+    await page.close();
+    await browser.close();
     process.exit();
 
   } catch (error) {

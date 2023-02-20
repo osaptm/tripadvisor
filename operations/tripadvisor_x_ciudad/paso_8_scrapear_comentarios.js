@@ -9,7 +9,7 @@ require('dotenv').config(); // Variables de entorno
 const MyProxy = new MyProxyClass();
 const resourceMutex = new mutex();
 var temp_array_pages = [];
-var workers = 1;
+var workers = 5;
 var contador_trabajos = 0;
 
 const accessResourcePageIndividual = async () => {
@@ -31,7 +31,7 @@ async function onePageIndividual() {
     temp_array_pages.splice(position, 1);
 
     try {
-        await mongo.Atraccion.updateOne({ _id: page._id }, { $set: { estado_scrapeo: 'INWORKER' } });
+        await mongo.Atraccion.updateOne({ _id: page._id }, { $set: { estado_scrapeo_comentarios: 'INWORKER' } });
         return page;
     } catch (error) {
         console.log(" --- ERROR onePageIndividual AL CAMBIAR ESTADO A LA PAGINA A SCRAPEAR");
@@ -47,7 +47,7 @@ async function workerScrapeAtraccionesPage(nameWorker) {
         if (page === null) {return;}
     
         contador_trabajos++;
-        const myWorker = new Worker('./workers/tripadvisor_x_ciudad/_atractivos.js',
+        const myWorker = new Worker('./workers/tripadvisor_x_ciudad/_comentarios.js',
             {
                 workerData: {
                     'contador_trabajos': contador_trabajos,
@@ -68,12 +68,15 @@ async function workerScrapeAtraccionesPage(nameWorker) {
 
 }
 
-const paso_7 = async () => {
+const paso_9 = async () => {
     try {
 
         await db_tripadvisor_x_ciudad();
 
-        let paginas_acumuladas = await mongo.Atraccion.find({estado_scrapeo: { $ne: 'FINALIZADO' }});
+        let paginas_acumuladas = await mongo.Atraccion.find({
+                estado_scrapeo_comentarios: { $ne: 'FINALIZADO' },
+                $expr: {$gt: [ { $add: [ '$opiniones.Excelente', '$opiniones.Muy_bueno' ] }, 20]}
+            });
           
         console.log("TOTAL DE PAGINAS = " + paginas_acumuladas.length);
 
@@ -95,4 +98,4 @@ const paso_7 = async () => {
 
 };
 
-module.exports = paso_7
+module.exports = paso_9

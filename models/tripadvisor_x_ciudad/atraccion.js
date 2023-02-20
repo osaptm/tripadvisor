@@ -15,6 +15,12 @@ const Atraccion = Schema({
         default: 'PENDING',
         emun: ['PENDING', 'INWORKER','FINALIZADO']
     },
+    estado_scrapeo_comentarios: {
+        type: String,
+        required: true,
+        default: 'PENDING',
+        emun: ['PENDING', 'INWORKER','FINALIZADO','ERROR']
+    },
     h1_page: { type: String},  
     breadcrumbs: { type: Object}, 
     categorias_reviews: { type: Object},  

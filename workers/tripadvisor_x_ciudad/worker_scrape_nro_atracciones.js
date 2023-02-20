@@ -72,6 +72,8 @@ async function mainWorker() {
   } catch (error) {
 
     console.log('ERROR EN MAIN '+workerData.ip_proxy, workerData.url, error);
+    await page.close();
+    await browser.close();
     process.exit();
 
   } 

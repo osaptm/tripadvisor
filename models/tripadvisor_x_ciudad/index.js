@@ -8,6 +8,7 @@ const Info_atraccion = require('./info_atraccion')
 const Pais = require('./pais')
 const Pagina = require('./pagina')
 const Atraccion_x_categoria = require('./atraccion_x_categoria')
+const Comentario = require('./comentario')
 
 module.exports = {
     Atraccion_repetida,
@@ -19,5 +20,6 @@ module.exports = {
     Info_atraccion,
     Pais,
     Pagina,
-    Atraccion_x_categoria
+    Atraccion_x_categoria,
+    Comentario
 }
