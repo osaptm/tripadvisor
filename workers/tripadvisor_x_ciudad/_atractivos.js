@@ -48,13 +48,11 @@ async function get_breadcrumbs(page, url_actual) {
 
 
 async function get_seccion_categorias_reviews(page) {
+  const obj_categorias_reviews = {datos: []};
   const seccion_categorias_reviews = await page.$("section div[data-automation='WebPresentation_PoiOverviewWeb']");
-  const categorias_reviews = await seccion_categorias_reviews.$$(".kUaIL");
+  if(!seccion_categorias_reviews){ return obj_categorias_reviews;}
 
-  const obj_categorias_reviews = {
-    datos: []
-  };
-
+  const categorias_reviews = await seccion_categorias_reviews.$$(".kUaIL");   
   for await (let element of categorias_reviews) {
 
     const reviews = await element.$(".jVDab");
@@ -257,16 +255,16 @@ async function get_opiniones(page) {
     const page = await browser.newPage();
 
     // Accedemos a la pagina
-    await page.goto(url);
-    const title_page = await page.title();   
+    await page.goto(url, { waitUntil: 'load' });
+      
 
     //Esoeramos por los comentarios -> si no aparece recargamos la pagina una vez - por si se colgo
     try {
-      await page.waitForSelector("div[data-automation='WebPresentation_PoiContribute']", { timeout: tiempo_espera });
+      await page.waitForSelector("footer", { timeout: tiempo_espera });
     } catch (error) {
-      console.log("Error Elemento div[data-automation='WebPresentation_PoiContribute']");
+      console.log("Error footer");
       await page.reload();
-      await page.waitForSelector("div[data-automation='WebPresentation_PoiContribute']", { timeout: tiempo_espera });
+      await page.waitForSelector("footer", { timeout: tiempo_espera });
     }
 
     let cantidad_scrapeado = 0;
@@ -300,6 +298,7 @@ async function get_opiniones(page) {
       cantidad_scrapeado: cantidad_scrapeado 
     } }); 
 
+    const title_page = await page.title(); 
     console.log(`${workerData?.contador_trabajos} -> ${workerData.ip_proxy} ${workerData.nameWorker}\n${title_page}\n${workerData.url}`);
 
     process.exit();
