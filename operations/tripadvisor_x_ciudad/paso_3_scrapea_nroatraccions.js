@@ -10,7 +10,7 @@ const mutexProxy = new mutex();
 const MyProxy = new MyProxyClass();
 
 var array_detalle = [];
-var workers = 1;
+var workers = 7;
 var contador_trabajos = 0;
 
 const accessResourceTodoPais = async () => {
@@ -39,6 +39,7 @@ async function worker_nro_atracciones(nameWorker) {
     let obj_detalle = await accessResourceTodoPais();
     if (obj_detalle === null) { return; }
     contador_trabajos++;
+    await mongo.Categoria_atraccion_ciudad.updateOne({ _id: obj_detalle._id }, { $set: { estado_scrapeo_nro: 'INWORKER' } });    
     const myWorker = new Worker('./workers/tripadvisor_x_ciudad/worker_scrape_nro_atracciones.js',
         {
             workerData: {
@@ -59,7 +60,14 @@ async function worker_nro_atracciones(nameWorker) {
 async function paso_3 (){
 
     await db_tripadvisor_x_ciudad();
-    const consulta = await mongo.Categoria_atraccion_ciudad.find({}); 
+    const consulta = await mongo.Categoria_atraccion_ciudad.find({
+        $or: [
+            {estado_scrapeo_nro: 'PENDING'},
+            {estado_scrapeo_nro: 'IN_WORKER'}, 
+            {estado_scrapeo_nro: 'INWORKER'}, 
+            {estado_scrapeo_nro: 'CON_ERRORES'},
+        ]
+    }); 
     if(consulta.length!==0){
         console.log(consulta.length);
         array_detalle = [...consulta];

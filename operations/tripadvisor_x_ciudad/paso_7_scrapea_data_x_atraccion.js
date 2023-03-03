@@ -9,7 +9,7 @@ require('dotenv').config(); // Variables de entorno
 const MyProxy = new MyProxyClass();
 const resourceMutex = new mutex();
 var temp_array_pages = [];
-var workers = 1;
+var workers = 5;
 var contador_trabajos = 0;
 
 const accessResourcePageIndividual = async () => {

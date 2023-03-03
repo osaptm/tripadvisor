@@ -28,10 +28,7 @@ async function paso_2_generar_paginas_scrapeo(){
             }    
        }
 
-        // TENEMOS QUE OBTENER EL NUMERO DE ATRACCIONES POR CADA Categoria_atraccion_ciudad PARA GENERAR SU PAGINACION
-        
-        
-
+        // TENEMOS QUE OBTENER EL NUMERO DE ATRACCIONES POR CADA Categoria_atraccion_ciudad PARA GENERAR SU PAGINACION      
         process.exit();
     } catch (error) {
         console.log("FINALIZAMOS TAREAS" + error);

@@ -10,7 +10,7 @@ const MyProxy = new MyProxyClass();
 
 const resourceMutex = new mutex();
 var temp_array_pages = [];
-var workers = 10;
+var workers = 5;
 var contador_trabajos = 0;
 
 const accessResourcePageIndividual = async () => {

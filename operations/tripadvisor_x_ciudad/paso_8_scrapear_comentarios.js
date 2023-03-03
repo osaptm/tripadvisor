@@ -9,7 +9,7 @@ require('dotenv').config(); // Variables de entorno
 const MyProxy = new MyProxyClass();
 const resourceMutex = new mutex();
 var temp_array_pages = [];
-var workers = 5;
+var workers = 1;
 var contador_trabajos = 0;
 
 const accessResourcePageIndividual = async () => {
@@ -32,6 +32,7 @@ async function onePageIndividual() {
 
     try {
         await mongo.Atraccion.updateOne({ _id: page._id }, { $set: { estado_scrapeo_comentarios: 'INWORKER' } });
+        await mongo.Comentario.deleteMany({id_atraccion: page._id});
         return page;
     } catch (error) {
         console.log(" --- ERROR onePageIndividual AL CAMBIAR ESTADO A LA PAGINA A SCRAPEAR");

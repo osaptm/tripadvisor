@@ -157,7 +157,7 @@ async function get_disfrutar(page) {
 }
 
 async function get_location(page) {
-  const obj_location = { };
+  const obj_location = {};
 
   try {
     await page.waitForSelector("div[data-automation='WebPresentation_PoiLocationSectionGroup'] > .QvCXh > .AcNPX > .gptQH > .C > .YWGPI > span > img", { timeout: tiempo_espera });
@@ -193,10 +193,10 @@ async function get_location(page) {
 async function get_opiniones(page) {
   const obj_opiniones = {};
   const existen_reviews = await get_seccion_categorias_reviews(page);
-  if (existen_reviews.datos.length !== 0) {
-    for (const dato of existen_reviews.datos) {
-      if (dato.info === 'reviews') {
-        const numero_comentarios = Number((dato.valor.replace(',', '')).replace('.', ''));
+  if ( Object.keys(existen_reviews).length !== 0) {
+    for (const dato of Object.keys(existen_reviews)) {
+      if (dato === 'reviews') {
+        const numero_comentarios = existen_reviews[dato];
         if (numero_comentarios > 0) {
 
           try {
@@ -255,7 +255,7 @@ async function get_opiniones(page) {
     // Abrimos un Navegador Chromiun
     const browser = await puppeteer.launch({
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox', `--proxy-server=${newProxyUrl}`] //  `--proxy-server=${newProxyUrl}` --> Proxy Sin usar otro paquete npm
+      args: ['--no-sandbox', '--disable-setuid-sandbox'] //  `--proxy-server=${newProxyUrl}` --> Proxy Sin usar otro paquete npm
     });
     // Una nueva pagina en Navegador
     const page = await browser.newPage();
@@ -275,7 +275,7 @@ async function get_opiniones(page) {
 
     let cantidad_scrapeado = 0;
     const location = await get_location(page); 
-      if( Object(location).keys().length !== 0) cantidad_scrapeado ++;     
+      if( Object.keys(location).length !== 0) cantidad_scrapeado ++;     
 
     const h1_page = await get_h1_page(page);
       if(h1_page.trim() !== "") cantidad_scrapeado ++;
@@ -284,10 +284,10 @@ async function get_opiniones(page) {
       if(breadcrumbs.datos.length !== 0) cantidad_scrapeado ++; 
 
     const seccion_categorias_reviews = await get_seccion_categorias_reviews(page);
-      if( Object(seccion_categorias_reviews).keys().length !== 0) cantidad_scrapeado ++;  
+      if( Object.keys(seccion_categorias_reviews).length !== 0) cantidad_scrapeado ++;  
 
     const seccion_acerca = await get_seccion_acerca(page);
-      if( Object(seccion_acerca).keys().length !== 0) cantidad_scrapeado ++;  
+      if( Object.keys(seccion_acerca).length !== 0) cantidad_scrapeado ++;  
 
     const seccion_fotos = await get_seccion_fotos(page);  
       if(seccion_fotos.datos.length !== 0) cantidad_scrapeado ++; 
@@ -296,7 +296,7 @@ async function get_opiniones(page) {
       if(disfrutar.datos.length !== 0) cantidad_scrapeado ++; 
 
     const opiniones = await get_opiniones(page); 
-      if(Object(opiniones).keys().length !== 0) cantidad_scrapeado ++; 
+      if(Object.keys(opiniones).length !== 0) cantidad_scrapeado ++; 
 
 
     await mongo.Atraccion.updateOne({ _id: workerData.idatraccion }, { $set: { 

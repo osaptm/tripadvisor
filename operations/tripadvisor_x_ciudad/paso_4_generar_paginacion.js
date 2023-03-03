@@ -6,10 +6,11 @@ async function paso_4(){
         // NUEVA CONEXION MONGO
         await db_tripadvisor_x_ciudad();
 
-        const consulta = await mongo.Categoria_atraccion_ciudad.find({});
-
+        const consulta = await mongo.Categoria_atraccion_ciudad.find({estado_scrapeo_nro: 'FINALIZADO'});
+        console.log(consulta.length)
         if (consulta.length !== 0) {
-            for (let index = 0; index < consulta.length; index++) {            
+            for (let index = 0; index < consulta.length; index++) { 
+                await mongo.Categoria_atraccion_ciudad.updateOne({ _id: consulta[index]._id }, { $set: { estado_paginacion_creada: 'FINALIZADO' } });            
                 const enteroPag = Math.ceil(consulta[index].numero_atracciones / 30);
                 let existe = null;
                 //console.log(consulta[index].url)
@@ -87,6 +88,8 @@ async function paso_4(){
                          
                     }
                 }
+
+                   
             }
         }else{
             console.log("NO HAY Categoria_atraccion_ciudad ")

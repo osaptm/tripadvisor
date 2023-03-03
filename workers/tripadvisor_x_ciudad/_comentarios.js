@@ -62,34 +62,41 @@ async function guardar_comentarios(array_comentarios) {
 async function trae_comentarios(page) {
   const comentarios = await page.$('#tab-data-qa-reviews-0 > .eSDnY > .LbPSX');
   if (comentarios) {
-    //console.log("Existen Comentarios")
+    console.log("Existen Comentarios")
+    console.log(`-----> COMENTARIOS - ${workerData.url}`)
     const array_comentarios = await comentarios.$$("div[data-automation='reviewCard']");
-    //console.log(`Total comentarios x page[${paginacion_comentarios}] = `, array_comentarios.length);
+    console.log(`Total comentarios x page[${paginacion_comentarios}] = `, array_comentarios.length);
 
     if(array_comentarios.length > 0){
       await guardar_comentarios(array_comentarios);
-    } 
+    }else{
+      console.log(`-----> RAROOOOOO - ${workerData.url}`)
+    }
 
     const paginacion = await comentarios.$('div > .uYzlj > .lATJZ > .tgunb > .gBgtO');
     if (paginacion) {
-      //console.log("Existe Paginacion")
+      console.log("Existe Paginacion")
       const datos_paginacion = await comentarios.$('div > .uYzlj > .biGQs');
       const title_ = await (await datos_paginacion.getProperty('textContent')).jsonValue();
-      //console.log(title_)
+      console.log(title_)
 
       const numeracionPaginacion = await paginacion.$$(".nsTKv > a");
       for (let elementoEnlace of numeracionPaginacion) {
         const nro_pagina = await (await elementoEnlace.getProperty('textContent')).jsonValue();
         if (Number(nro_pagina) === paginacion_comentarios + 1) {
-          //console.log("Existe PAGINA NRO " + nro_pagina)
+          console.log("Existe PAGINA NRO " + nro_pagina )
           paginacion_comentarios++;
           return elementoEnlace;
         }
       }
       return null;
+    }else{
+      console.log(`-----> SIN PAGINACION - ${workerData.url}`)
+      return null;
     } 
 
   }else{
+    console.log(`-----> SIN COMENTARIOS - ${workerData.url}`)
     return null;
   }
 }
@@ -103,9 +110,8 @@ async function trae_comentarios(page) {
     const browser = await puppeteer.launch({
       headless: true,
       args: ['--no-sandbox',
-        '--disable-setuid-sandbox',
-        `--proxy-server=${newProxyUrl}`,
-        '--window-size=1920,1080'] //  `--proxy-server=${newProxyUrl}` --> Proxy Sin usar otro paquete npm
+        '--disable-setuid-sandbox',           
+        '--window-size=1920,1080'] //  `--proxy-server=${newProxyUrl}` --> Proxy Sin usar otro paquete npm  `--proxy-server=${newProxyUrl}`,   
     });
     // Una nueva pagina en Navegador
     const page = await browser.newPage();
@@ -124,11 +130,11 @@ async function trae_comentarios(page) {
 
     //Esoeramos por los comentarios -> si no aparece recargamos la pagina una vez - por si se colgo
     try {
-      await page.waitForSelector("footer", { timeout: tiempo_espera });
+      await page.waitForSelector("#tab-data-qa-reviews-0", { timeout: tiempo_espera });
     } catch (error) {
-      console.log("Error footer");
+      console.log("Error #tab-data-qa-reviews-0");
       await page.reload();
-      await page.waitForSelector("footer", { timeout: tiempo_espera });
+      await page.waitForSelector("#tab-data-qa-reviews-0", { timeout: tiempo_espera });
     }
 
     const cookies = await page.$('#onetrust-accept-btn-handler');
@@ -139,18 +145,31 @@ async function trae_comentarios(page) {
     }
 
     await new Promise(r => setTimeout(r, 5000));
+    
     await page.evaluate(() => {
-      return location.href = "#REVIEWS";
-    });
+      return location.href = "#tab-data-qa-reviews-0";
+    }); 
+   
+       
 
     const filtros = await page.$('#tab-data-qa-reviews-0');
     if (filtros) {
       //console.log("Hay filtros");
-      const primer_boton = await filtros.$('.OKHdJ:nth-of-type(1)');
-      //const title_ = await (await primer_boton.getProperty('textContent')).jsonValue();
+      const primer_boton = await filtros.$('.OKHdJ:nth-of-type(1) > .RCAPL');     
+      const title_filtros = await (await primer_boton.getProperty('textContent')).jsonValue();
       await primer_boton.click();
       await new Promise(r => setTimeout(r, 1000));
-      const mas_filtros = await page.$('.YmElR > .qgcDG > .C');
+      
+      try {
+        await page.waitForSelector(".HyAcm > .WMIKb", { timeout: tiempo_espera });
+      } catch (error) {
+        console.log(title_filtros + `-----> ERROR CLICK FILTROS - ${workerData.url}`) 
+        return null;      
+      }
+
+      const modal_filtros = await page.$('.HyAcm > .WMIKb');      
+      const mas_filtros = await modal_filtros.$('.YmElR > .qgcDG');           
+
       if (mas_filtros) {
         //console.log("Hay mas filtros");
         const boton4 = await mas_filtros.$('.OKHdJ:nth-of-type(4)');
@@ -167,22 +186,31 @@ async function trae_comentarios(page) {
         if (boton_aplicar) {
           //console.log("Aplicamos filtros");
           await boton_aplicar.click();
-          await new Promise(r => setTimeout(r, 5000));
+          await new Promise(r => setTimeout(r, 10000));
           let elemento_pagina = await trae_comentarios(page);
 
           while (elemento_pagina!==null && comentarios_grabados < 100){
             await elemento_pagina.click();
-            await new Promise(r => setTimeout(r, 5000));
+            await new Promise(r => setTimeout(r, 10000));
             elemento_pagina = await trae_comentarios(page);
           }
 
+        }else{
+          console.log(`-----> SIN APLICAR FILTROS - ${workerData.url}`)
         }
+
+      }else{
+        console.log(title_filtros + `-----> SIN MAS FILTROS - ${workerData.url}`)
       }
+
+    }else{
+      console.log(`-----> SIN BOTON FILTROS - ${workerData.url}`)
     }
 
     console.log(`${workerData?.contador_trabajos} -> ${workerData.ip_proxy} ${workerData.nameWorker} - ${workerData.url}`);
 
-    if(comentarios_grabados < 20){
+    if(comentarios_grabados < 13){
+      console.log("-------------------------> ERROR - SOLO TIENE "+ comentarios_grabados +" COMENTARIOS")
       await mongo.Atraccion.updateOne({ _id: workerData.idatraccion }, { $set: { estado_scrapeo_comentarios: 'ERROR' } });
     } else {
       await mongo.Atraccion.updateOne({ _id: workerData.idatraccion }, { $set: { estado_scrapeo_comentarios: 'FINALIZADO' } });

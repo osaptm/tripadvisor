@@ -10,6 +10,22 @@ const Categoria_atraccion_ciudad = Schema({
         required: true,
         default: 'PENDING',
         emun: ['PENDING', 'FINALIZADO']
+    },
+    estado_scrapeo_nro: {
+        type: String,
+        required: true,
+        default: 'PENDING',
+        emun: ['PENDING', 'IN_WORKER', 'CON_ERRORES', 'FINALIZADO','NO_TIENE', 'URL_RARA']
+    },
+    estado_paginacion_creada: {
+        type: String,
+        required: true,
+        default: 'PENDING',
+        emun: ['PENDING',  'FINALIZADO']
+    },
+    
+    fecha_scrapeo_nro:{
+        type: Date,
     }
 });
 
