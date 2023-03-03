@@ -19,8 +19,8 @@ const db_tripadvisor_all = async() => {
 const db_tripadvisor_x_ciudad = async() => {
     try {
         mongoose.set('strictQuery', false);          
-        //mongoose.connect('mongodb://'+USER_MONGO+':'+PASS_MONGO+'@'+IP_MONGO+':27017/tripadvisor_x_ciudad'+OPCIONES_MONGO, {
-        mongoose.connect('mongodb://osaptm:123@127.0.0.1:27017/tripadvisor_x_ciudad'+OPCIONES_MONGO, {
+        mongoose.connect('mongodb://'+USER_MONGO+':'+PASS_MONGO+'@'+IP_MONGO+':27017/tripadvisor_x_ciudad'+OPCIONES_MONGO, {
+        //mongoose.connect('mongodb://osaptm:123@127.0.0.1:27017/tripadvisor_x_ciudad'+OPCIONES_MONGO, {
             useNewUrlParser: true,
             useUnifiedTopology: true,
         }); 

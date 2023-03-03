@@ -255,7 +255,7 @@ async function get_opiniones(page) {
     // Abrimos un Navegador Chromiun
     const browser = await puppeteer.launch({
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'] //  `--proxy-server=${newProxyUrl}` --> Proxy Sin usar otro paquete npm
+      args: ['--no-sandbox', '--disable-setuid-sandbox', `--proxy-server=${newProxyUrl}`] //  `--proxy-server=${newProxyUrl}` --> Proxy Sin usar otro paquete npm
     });
     // Una nueva pagina en Navegador
     const page = await browser.newPage();
