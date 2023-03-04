@@ -15,6 +15,8 @@ const router = Router();
 
 const MyProxy = new MyProxyClass();
 
+require('dotenv').config();
+
 const accessResource_receptor_consulta = async (req, res) => {
     const release = await resourceMutex.acquire();
     try {
@@ -35,7 +37,7 @@ const receptor_consulta = async (req, res) => {
     if(coleccion === 'Atraccion'){
         await mongo.Atraccion.updateOne({ _id: queryFinal[0]._id }, { $set: { estado_scrapeo_comentarios: 'INWORKER' } }); 
     }
-    
+
     res.send({'pagina': queryFinal, 'proxy': ip_proxy}); 
 }
 
