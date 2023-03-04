@@ -110,8 +110,7 @@ async function trae_comentarios(page) {
     const browser = await puppeteer.launch({
       headless: true,
       args: ['--no-sandbox',
-        '--disable-setuid-sandbox',
-        `--proxy-server=${newProxyUrl}`,           
+        '--disable-setuid-sandbox',         
         '--window-size=1920,1080'] //  `--proxy-server=${newProxyUrl}` --> Proxy Sin usar otro paquete npm  `--proxy-server=${newProxyUrl}`,   
     });
     // Una nueva pagina en Navegador

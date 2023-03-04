@@ -10,7 +10,7 @@ const proxyChain = require('proxy-chain');
 
 // ************* Variable requeridas ************* //
 const proxyUrl = 'http://prueba:123@' + workerData.ip_proxy;
-const tiempo_espera = 30000;
+const tiempo_espera = 15000;
 // ************* Variable requeridas ************* //
 
 function nombre_final_sin_numeracion(nombre) {
@@ -255,15 +255,14 @@ async function get_opiniones(page) {
     // Abrimos un Navegador Chromiun
     const browser = await puppeteer.launch({
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox', `--proxy-server=${newProxyUrl}`] //  `--proxy-server=${newProxyUrl}` --> Proxy Sin usar otro paquete npm
+      args: ['--no-sandbox', '--disable-setuid-sandbox'] //  `--proxy-server=${newProxyUrl}` --> Proxy Sin usar otro paquete npm
     });
     // Una nueva pagina en Navegador
     const page = await browser.newPage();
 
     // Accedemos a la pagina
-    await page.goto(url, { waitUntil: 'load' });
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout:10000 });
       
-
     //Esoeramos por los comentarios -> si no aparece recargamos la pagina una vez - por si se colgo
     try {
       await page.waitForSelector("footer", { timeout: tiempo_espera });

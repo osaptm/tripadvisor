@@ -1,15 +1,40 @@
 const { db_tripadvisor_x_ciudad } = require('./database/config');
 const mongo = require('./models/tripadvisor_x_ciudad');
 const { ObjectId } = require('mongoose').Types;
-const express = require('express');
-const cors = require('cors');
-const fileUpload = require('express-fileupload');
 const  mongoose = require('mongoose');
+
+const express = require('express');
+const app = express();
+const server = require('http').createServer(app);
+
+const io = require('socket.io')(server);
+
+const cors = require('cors');
+
+const fileUpload = require('express-fileupload');
+
+const { loadIndex } = require('./controllers/index');
 //------------- CONFIG Y VARIABLES -------------
 require('dotenv').config();
-const app = express();
 const PORT = process.env.PORT;
 app.set('pasos_scrapeo', false); // Variable gobal express - Para ejecutar un prceso al mismo tiempo
+io.on('connection', (socket) => { 
+  console.log("Socket Connect " + socket.id);  
+
+  socket.on("scrapea_info", async (id_atraccion) => {
+    const opera_scrapea_data_x_atraccion = require('./operations/tripadvisor_x_ciudad/opera_scrapea_data_x_atraccion');
+    await opera_scrapea_data_x_atraccion(id_atraccion, socket); 
+  });
+
+  socket.on("scrapea_reviews", async (id_atraccion) => {
+    socket.emit("result_scrapea_reviews",JSON.stringify( {msj : "EN DESARROLLO"} ));  
+    //const opera_scrapea_data_x_atraccion = require('./operations/tripadvisor_x_ciudad/opera_scrapear_comentarios');
+    //await opera_scrapea_data_x_atraccion(id_atraccion, socket); 
+  });
+
+});
+
+
 
 //------------- MIDDLEWARES -------------
 // CORS
@@ -26,45 +51,15 @@ app.use( fileUpload({
 }));
 // Motor de plantillas
 app.set('view engine', 'ejs');
+
 //------------- RUTAS -------------
-app.get("/", async (req, res)=>{   
-    await db_tripadvisor_x_ciudad(); // Conectamos a Mongo DB
-
-    // const session = await mongoose.startSession(); // Creamos una session para Transactions
-    // session.startTransaction(); // Iniciamos una Transaction
-    // await mongo.Blog.create([{nombre: 'Blog 1'},{nombre: 'Blog 2'}], { session: session }); // Usamos CREATE con la opcion de la session 
-    // await session.commitTransaction(); // Ejecutamos la transaccion anterior que esta en la session
-    // await session.endSession(); // Cerramos la Transaccion
-
-    //const blogs = await mongo.Blog.find({});
-    const blogs =  await mongo.Blog.aggregate([
-      {          
-        $lookup: {
-          from: "pais_blogs",
-          localField: "_id",
-          foreignField: "id_blog",
-          as: "paises_blog" ,   
-        },           
-      },
-      {
-        $lookup: {
-          from: "pais",
-          localField: "paises_blog.id_pais",
-          foreignField: "_id",
-          as: "pais"
-        }         
-      }
-    ]);
-
-    res.render('index',{ blogs });
-   
-});
+app.get("/", loadIndex); // Ruta Index
+app.use("/",require("./routes/orquestador"));
 app.use("/",require("./routes/backend"));
 app.use("/",require("./routes/scrapea_pais"));
 app.use("/",require("./routes/download_image"));
 
 //------------- INICIAR SERVER -------------
-app.listen(PORT);
-console.log("Ejecutando en PORT "+PORT)
+server.listen(PORT); console.log("Ejecutando en PORT "+PORT)
 
 

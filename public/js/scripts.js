@@ -182,7 +182,12 @@ async function getAtracciones(selectObject, pagina_actual = 1) {
         
         <div style='display:none' class='botones_atraccion' id='botones_atraccion_${atraccion._id}'>
             <button style="font-size:10px" onclick="getComentarios('${atraccion._id}',1,${atraccion.cantidad_comentarios})" type="button" data-bs-toggle="modal" data-bs-target="#modal_comentarios" class="btn btn-primary btn-sm">Ver Comentarios</button>
+
             <button style="font-size:10px" type="button" class="btn btn-secondary btn-sm">Gestionar Contenido</button>
+
+            <button style="font-size:10px" onclick="scrapea_info('${atraccion._id}')" type="button" data-bs-toggle="modal" data-bs-target="#modal_scrapeo_informacion" class="btn btn-warning btn-sm">Scrape Info</button>
+
+            <button style="font-size:10px" onclick="scrapea_reviews('${atraccion._id}')" type="button" data-bs-toggle="modal" data-bs-target="#modal_scrapeo_reviews" class="btn btn-info btn-sm">Scrape reviews</button>
         </div>
 
         <details class='details_init'>
