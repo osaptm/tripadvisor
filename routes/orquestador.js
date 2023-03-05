@@ -20,25 +20,27 @@ require('dotenv').config();
 const accessResource_receptor_consulta = async (req, res) => {
     const release = await resourceMutex.acquire();
     try {
-        return receptor_consulta(req, res);
+        console.log("******** Nueva Peticion *********");
+        const ip_proxy = await MyProxy.accessResourceProxy();
+        const queryFinal = await receptor_consulta(req.body);
+        res.send({'pagina': queryFinal, 'proxy': ip_proxy, error: null}); 
     } catch (error) {
         console.log("Error Mutex Orquestador" + error);
+        res.send({'pagina': [], 'proxy': null, error : "Error Mutex Orquestador " +error}); 
     } finally {
         release();
     }
 };
 
-const receptor_consulta = async (req, res) => {
-    await db_tripadvisor_x_ciudad();
-    const ip_proxy = await MyProxy.accessResourceProxy();
-    const {queryMongo, coleccion} = req.body;
-    const queryFinal =  await eval(queryMongo);
-
-    if(coleccion === 'Atraccion'){
-        await mongo.Atraccion.updateOne({ _id: queryFinal[0]._id }, { $set: { estado_scrapeo_comentarios: 'INWORKER' } }); 
+const receptor_consulta = async ({queryMongo, coleccion}) => {
+    try {        
+        await db_tripadvisor_x_ciudad();
+        const queryFinal =  await eval(queryMongo);    
+        if(coleccion === 'Atraccion') await mongo.Atraccion.updateOne({ _id: queryFinal[0]._id }, { $set: { estado_scrapeo_comentarios: 'INWORKER' } }); 
+        return queryFinal;          
+    } catch (error) {
+        throw "Error receptor_consulta "+error;
     }
-
-    res.send({'pagina': queryFinal, 'proxy': ip_proxy}); 
 }
 
 router.post("/orquestador/", accessResource_receptor_consulta);
