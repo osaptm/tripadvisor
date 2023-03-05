@@ -23,10 +23,10 @@ const accessResource_receptor_consulta = async (req, res) => {
         console.log("******** Nueva Peticion *********");
         const ip_proxy = await MyProxy.accessResourceProxy();
         const queryFinal = await receptor_consulta(req.body);
-        res.send({'pagina': queryFinal, 'proxy': ip_proxy, error: null}); 
+        res.send({'pagina': queryFinal, 'proxy': ip_proxy, 'error': null}); 
     } catch (error) {
         console.log("Error Mutex Orquestador" + error);
-        res.send({'pagina': [], 'proxy': null, error : "Error Mutex Orquestador " +error}); 
+        res.send({'pagina': [], 'proxy': null, 'error' : "Error Mutex Orquestador " + error}); 
     } finally {
         release();
     }
@@ -42,8 +42,9 @@ const receptor_consulta = async ({queryMongo, coleccion}) => {
                 await mongo.Atraccion.updateOne({ _id: queryFinal[0]._id }, { $set: { estado_scrapeo_comentarios: 'INWORKER' } }); 
             } 
         }
-            
-        return queryFinal;          
+
+        return queryFinal;  
+
     } catch (error) {
         throw "Error receptor_consulta "+error;
     }
