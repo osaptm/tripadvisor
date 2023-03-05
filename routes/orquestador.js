@@ -35,8 +35,14 @@ const accessResource_receptor_consulta = async (req, res) => {
 const receptor_consulta = async ({queryMongo, coleccion}) => {
     try {        
         await db_tripadvisor_x_ciudad();
-        const queryFinal =  await eval(queryMongo);    
-        if(coleccion === 'Atraccion') await mongo.Atraccion.updateOne({ _id: queryFinal[0]._id }, { $set: { estado_scrapeo_comentarios: 'INWORKER' } }); 
+        const queryFinal =  await eval(queryMongo);
+
+        if(queryFinal.length !== 0 ){
+            if(coleccion === 'Atraccion'){
+                await mongo.Atraccion.updateOne({ _id: queryFinal[0]._id }, { $set: { estado_scrapeo_comentarios: 'INWORKER' } }); 
+            } 
+        }
+            
         return queryFinal;          
     } catch (error) {
         throw "Error receptor_consulta "+error;
